@@ -1,4 +1,3 @@
-push!(LOAD_PATH,pwd()*"/src")
 using disCovErr
 using Documenter
 
