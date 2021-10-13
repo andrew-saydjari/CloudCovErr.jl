@@ -2,8 +2,8 @@ using disCovErr
 using Documenter
 
 makedocs(
-    root= "/Users/saydjari/Dropbox/GradSchool_AKS/Doug/myPublicPkgs/disCovErr.jl/docs",
-    source= "/Users/saydjari/Dropbox/GradSchool_AKS/Doug/myPublicPkgs/disCovErr.jl/src",
+    root= "/",
+    source= "src",
     build="build",
     clean=true,
     highlightsig = true,
