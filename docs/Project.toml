@@ -1,7 +1,3 @@
-name = "disCovErr"
-uuid = "27265a64-b7e3-4dc3-94fe-c3a18e23078a"
-version = "0.1.1"
-
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
