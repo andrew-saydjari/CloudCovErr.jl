@@ -9,4 +9,5 @@ makedocs(
 
 deploydocs(
     repo = "github.com/andrew-saydjari/disCovErr.jl.git",
+    branch = "gh-pages",
 )
