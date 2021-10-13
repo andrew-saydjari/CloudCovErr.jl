@@ -10,3 +10,7 @@ makedocs(
     highlightsig = true,
     sitename= "disCovErr",
 )
+
+deploydocs(
+    repo = "github.com/andrew-saydjari/disCovErr.jl.git",
+)
