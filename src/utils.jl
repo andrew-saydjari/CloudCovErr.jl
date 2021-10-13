@@ -94,6 +94,44 @@ function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
 end
 
 """
+    boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
+
+Boxcar smooths an input image (or paddedview) `arr` with window size `widx` by
+`widy`. We pass the original image size `sx` and `sy` to help handle image views.
+
+# Arguments:
+- `out`: preallocated output array for the boxcar smoothed image
+- `arr`: input array for which boxcar smoothing is computed (generally paddedview)
+- `widx::Int`: size of boxcar smoothing window in x
+- `widy::Int`: size of boxcar smoothing window in y
+- `sx::Int`: x size of the original (unpadded) image
+- `sy::Int`: y size of the original (unpadded) image
+"""
+function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
+    Δx = (widx-1)÷2
+    Δy = (widy-1)÷2
+
+    tot = zeros(sy)
+
+    for j=1-Δy:sy-Δy
+        if (j==1-Δy)
+            @views tot = (sum(arr[:,1-Δy:1+Δy], dims=2))[:,1]
+        else
+            @views tot .+= (arr[:,j+widy-1]-arr[:,j-1])
+        end
+        tt=0
+        for i=1-Δx:sx-Δx
+            if (i==1-Δx)
+                @views tt = sum(tot[1-Δx:1+Δx])
+            else
+                @views tt -= (tot[i-1]-tot[i+widx-1])
+            end
+            out[i+Δx,j+Δy] = tt
+        end
+    end
+end
+
+"""
     per_star(ind) -> per_star_stats()
 
     TBD
