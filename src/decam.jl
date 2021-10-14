@@ -2,7 +2,7 @@
 import FITSIO
 
 """
-    read_decam(base,date,filt,vers,ccd)
+    read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
 
 Read in raw image files associated with exposures obtain on the DarkEnergyCamera.
 Returns the image, a weighting image, and a quality flag mask image. See [NOAO
@@ -24,27 +24,50 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 """
 function read_decam(base,date,filt,vers,ccd)
     f = FITSIO.FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
-    ref_im = read(f[ccd])
-    close(f)
+    ref_im = FITSIO.read(f[ccd])
+    FITSIO.close(f)
     f = FITSIO.FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
-    w_im = read(f[ccd])
-    close(f)
+    w_im = FITSIO.read(f[ccd])
+    FITSIO.close(f)
     f = FITSIO.FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
-    d_im = read(f[ccd])
-    close(f)
+    d_im = FITSIO.read(f[ccd])
+    FITSIO.close(f)
     return ref_im, w_im, d_im
 end
 
-# f = FITS("/n/home12/saydjari/finksagescratch/decaps/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
-# x_stars = read(f[key*"_CAT"],"x")
-# y_stars = read(f[key*"_CAT"],"y")
-# close(f)
-#
-# f = FITS("/n/home12/saydjari/finksagescratch/decaps/mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
-# mod_im = read(f[key*"_MOD"])
-# sky_im = read(f[key*"_SKY"])
-# msk_im = read(f[key*"_MSK"])
-# close(f)
+"""
+    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, mod_im, sky_im
+
+Read in outputs of crowdsource, a photometric pipeline. To pair with an arbitrary
+photometric pipeline, an analogous read in function should be created. The relevant
+outputs are the model image (including the sources) so that we can produce the
+residual image, the sky/background model (no sources), and the coordinates of the stars.
+
+# Arguments:
+- `base`: parent directory and file name prefix for crowdsource results files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `ccd`: which ccd we are pulling the image for
+
+# Example
+```julia
+ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
+```
+
+"""
+function read_crowdsource(base,date,filt,vers,ccd)
+    f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+    x_stars = FITSIO.read(f[ccd*"_CAT"],"x")
+    y_stars = FITSIO.read(f[ccd*"_CAT"],"y")
+    FITSIO.close(f)
+
+    f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
+    mod_im = FITSIO.read(f[ccd*"_MOD"])
+    sky_im = FITSIO.read(f[ccd*"_SKY"])
+    FITSIO.close(f)
+    return x_stars, y_stars, mod_im, sky_im
+end
 
 # #
 # thr = 20
@@ -148,7 +171,7 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; 
     end
     return
 end
-#
+
 # @showprogress for j=1:size(testim2)[2], i=1:size(testim2)[1]
 #     if maskim0[i,j]
 #         intermed = -(rand(Distributions.Poisson(convert(Float64,gain*(skyim3[i,j]-testim2[i,j]))))/gain.-skyim3[i,j])
@@ -162,7 +185,7 @@ end
 # cx = round.(Int64,(y_stars.-549)[calstar]).+1;
 # count(stars_interior), count(calstar)
 #
-# cov_loc, cnts_loc, μ_loc  = cov_construct_I(testim2,maskim,cy,cx,Np=33,wid=127);
+#### cov_loc, cnts_loc, μ_loc  = cov_construct_I(testim2,maskim,cy,cx,Np=33,wid=127);
 #
 # psf33 = py"psf0(0,0,stampsz=33)"
 # calflux = flux_stars[calstar];
@@ -192,28 +215,7 @@ end
 # for i=1:size(cx)[1]
 #     stamps1[i,:,:]=out0[i][2]
 # end
-#
-# test2 = merged_cat1[9,:] .∈ [findall(calstar)]
-# p = sortperm(merged_cat1[9,test2]);
-#
-# map1 = StatsBase.countmap(merged_cat1[9,test2])
-# dmask = []
-# for x in merged_cat1[9,test2][p]
-#     push!(dmask,map1[x]==1)
-# end
-# sum(dmask)
-#
-# dmask1 = []
-# for x in(1:7304)[calstar]
-#     push!(dmask1,map1[x]==1)
-# end
-# sum(dmask1)
-#
-# dmask_1 = convert.(Bool,dmask)
-# dmask1_1 = convert.(Bool,dmask1);
-#
-#
-#
+
 
 """
     per_star(ind) -> per_star_stats()
