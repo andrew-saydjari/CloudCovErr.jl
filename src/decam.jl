@@ -36,12 +36,14 @@ function read_decam(base,date,filt,vers,ccd)
 end
 
 """
-    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, mod_im, sky_im
+    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, decapsid, mod_im, sky_im
 
 Read in outputs of crowdsource, a photometric pipeline. To pair with an arbitrary
 photometric pipeline, an analogous read in function should be created. The relevant
 outputs are the model image (including the sources) so that we can produce the
 residual image, the sky/background model (no sources), and the coordinates of the stars.
+The survey id number is also readout of the pipeline solution file to help
+cross-validate matching of the disCovErr outputs and the original sources.
 
 # Arguments:
 - `base`: parent directory and file name prefix for crowdsource results files
@@ -49,24 +51,19 @@ residual image, the sky/background model (no sources), and the coordinates of th
 - `filt`: optical filter used to take the exposure
 - `vers`: NOAO community processing version number
 - `ccd`: which ccd we are pulling the image for
-
-# Example
-```julia
-ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
-```
-
 """
 function read_crowdsource(base,date,filt,vers,ccd)
     f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
     x_stars = FITSIO.read(f[ccd*"_CAT"],"x")
     y_stars = FITSIO.read(f[ccd*"_CAT"],"y")
+    decapsid = FITSIO.read(f[ccd*"_CAT"],"decapsid")
     FITSIO.close(f)
 
     f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
     mod_im = FITSIO.read(f[ccd*"_MOD"])
     sky_im = FITSIO.read(f[ccd*"_SKY"])
     FITSIO.close(f)
-    return x_stars, y_stars, mod_im, sky_im
+    return x_stars, y_stars, decapsid, mod_im, sky_im
 end
 
 # #
