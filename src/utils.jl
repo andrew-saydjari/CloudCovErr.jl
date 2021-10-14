@@ -1,6 +1,8 @@
 ## utility functions
 import OffsetArrays
 import ImageFiltering
+import ShiftedArrays
+import OffsetArrays
 
 """
     cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129) -> cov, μ
