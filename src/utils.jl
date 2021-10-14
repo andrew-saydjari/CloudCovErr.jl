@@ -1,5 +1,6 @@
 ## utility functions
-using OffsetArrays
+import OffsetArrays
+import ImageFiltering
 
 """
     cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129) -> cov, μ
