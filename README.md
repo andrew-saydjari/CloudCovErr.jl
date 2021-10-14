@@ -8,7 +8,7 @@ Pipeline for debiasing and improving error bar estimates for photometry on top o
 
 ## Documentation
 
-Detailed documentation can be found [here]([docs-dev-url]).
+Detailed documentation can be found [here][docs-dev-url].
 
 <!-- URLS -->
 [action-img]: https://github.com/andrew-saydjari/disCovErr.jl/workflows/Unit%20test/badge.svg
