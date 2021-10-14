@@ -2,6 +2,8 @@
 import disCovErr
 import FITSIO
 import ImageFiltering
+import Distributions
+using Random
 
 """
     read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
@@ -38,14 +40,16 @@ function read_decam(base,date,filt,vers,ccd)
 end
 
 """
-    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, decapsid, mod_im, sky_im
+    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, decapsid, gain, mod_im, sky_im
 
 Read in outputs of crowdsource, a photometric pipeline. To pair with an arbitrary
 photometric pipeline, an analogous read in function should be created. The relevant
 outputs are the model image (including the sources) so that we can produce the
 residual image, the sky/background model (no sources), and the coordinates of the stars.
 The survey id number is also readout of the pipeline solution file to help
-cross-validate matching of the disCovErr outputs and the original sources.
+cross-validate matching of the disCovErr outputs and the original sources. The emperical
+gain is read out of the header (for other photometric pipelines which don't perform this estiamte,
+the gain from DECam is likely sufficient).
 
 # Arguments:
 - `base`: parent directory and file name prefix for crowdsource results files
@@ -55,17 +59,18 @@ cross-validate matching of the disCovErr outputs and the original sources.
 - `ccd`: which ccd we are pulling the image for
 """
 function read_crowdsource(base,date,filt,vers,ccd)
-    f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+    f = FITSIO.FITS(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
     x_stars = FITSIO.read(f[ccd*"_CAT"],"x")
     y_stars = FITSIO.read(f[ccd*"_CAT"],"y")
     decapsid = FITSIO.read(f[ccd*"_CAT"],"decapsid")
+    gain = FITSIO.read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
     FITSIO.close(f)
 
-    f = FITSIO.FITS("/n/home12/saydjari/finksagescratch/decaps/mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
+    f = FITSIO.FITS(base*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
     mod_im = FITSIO.read(f[ccd*"_MOD"])
     sky_im = FITSIO.read(f[ccd*"_SKY"])
     FITSIO.close(f)
-    return x_stars, y_stars, decapsid, mod_im, sky_im
+    return x_stars, y_stars, decapsid, gain, mod_im, sky_im
 end
 
 # #
@@ -171,23 +176,31 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; 
     return
 end
 
-# @showprogress for j=1:size(testim2)[2], i=1:size(testim2)[1]
-#     if maskim0[i,j]
-#         intermed = -(rand(Distributions.Poisson(convert(Float64,gain*(skyim3[i,j]-testim2[i,j]))))/gain.-skyim3[i,j])
-#         testim2[i,j] = intermed
-#     end
-# end
-#
-# stars_interior = ((x_stars) .> 550 .+Np) .& ((x_stars) .< 1750 .-Np) .& ((y_stars) .> 550 .+Np) .& ((y_stars) .< 1400 .-Np);
-# calstar = (x_stars .∈ [merged_cat1[4,:]]) .& stars_interior;
-# cy = round.(Int64,(x_stars.-549)[calstar]).+1;
-# cx = round.(Int64,(y_stars.-549)[calstar]).+1;
-# count(stars_interior), count(calstar)
-#
-#### cov_loc, cnts_loc, μ_loc  = cov_construct_I(testim2,maskim,cy,cx,Np=33,wid=127);
-#
+"""
+    add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
+
+Adds noise to the infill that matches the Poisson noise of a rough estimate for
+the sky background. A random seed to set a local random generator is provided for
+reproducible unit testing.
+
+# Arguments:
+- `testim2`: input image which had infilling
+- `maskim0`: mask of pixels which were infilled
+- `skyim3`: rough estimate of sky background counts
+- `gain`: gain of detector to convert from photon count noise to detector noise
+- `seed`: random seed for random generator
+"""
+function add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
+    rng = MersenneTwister(seed)
+    for j=1:size(testim2)[2], i=1:size(testim2)[1]
+        if maskim0[i,j]
+            intermed = -(rand(rng, Distributions.Poisson(convert(Float64,gain*(skyim3[i,j]-testim2[i,j]))))/gain.-skyim3[i,j])
+            testim2[i,j] = intermed
+        end
+    end
+end
+
 # psf33 = py"psf0(0,0,stampsz=33)"
-# calflux = flux_stars[calstar];
 #
 # py"""
 # def load_psfmodel(outfn, key, filter, pixsz=9):
