@@ -48,7 +48,7 @@ function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
 
     Δr, Δc = cy.-(halfNp-1), cx.-(halfNp-1)
 
-    boxsmoothMod!(in_image,widx,widy,bimage,sx,sy)
+    boxsmoothMod!(bimage,in_image,widx,widy,sx,sy)
     # loop over shifts
     for dc=0:Np-1       # column shift loop
         for dr=1-Np:Np-1   # row loop, incl negatives
@@ -56,7 +56,7 @@ function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
             ism = in_image .* OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
 
             # bism = boxcar(ism)
-            boxsmoothMod!(ism,widx,widy,bism,sx,sy)
+            boxsmoothMod!(bism,ism,widx,widy,sx,sy)
             if dr >= 0
                 for pc=1:Np-dc, pr=1:Np-dr
                     i = ((pc   -1)*Np)+pr
