@@ -13,5 +13,5 @@ Pipeline for debiasing and improving error bar estimates for photometry on top o
 [docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
 [docs-dev-url]: https://andrew-saydjari.github.io/disCovErr.jl/dev/
 
-[codecov-img]: https://codecov.io/github/andrew-saydjari/disCovErr.jl/coverage.svg?branch=master
+[codecov-img]: https://codecov.io/github/andrew-saydjari/disCovErr.jl/coverage.svg?branch=main
 [codecov-url]: https://codecov.io/github/andrew-saydjari/disCovErr.jl?branch=main
