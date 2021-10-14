@@ -1,5 +1,5 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
-using utils
+import disCovErr
 import FITSIO
 import ImageFiltering
 
@@ -147,8 +147,8 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; 
         in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
         in_mask = ImageFiltering.padarray(.!maskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
 
-        boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
-        boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
+        disCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
+        disCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
 
         goodpix = (bimageI .> 10)
 
