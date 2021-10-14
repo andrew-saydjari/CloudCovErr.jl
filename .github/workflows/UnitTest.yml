@@ -1,14 +1,6 @@
 name: Unit test
 
-on:
-  create:
-    tags:
-  push:
-    branches:
-      - master
-  pull_request:
-  schedule:
-    - cron: '20 00 1 * *'
+on: [push]
 
 jobs:
   test:
