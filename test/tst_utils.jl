@@ -1,9 +1,6 @@
 module utils_tests
     using Test
     using disCovErr
-    using ImageFiltering
-    using OffsetArrays
-    using ShiftedArrays
 
     @testset "CovEst" begin
         X, Y = cov_construct(ones(256,256),[128],[128])
