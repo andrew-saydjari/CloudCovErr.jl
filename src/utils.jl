@@ -56,7 +56,7 @@ function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
     for dc=0:Np-1       # column shift loop
         for dr=1-Np:Np-1   # row loop, incl negatives
             # ism = image, shifted and multipled
-            ism = in_image .* OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
+            ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
 
             # bism = boxcar(ism)
             boxsmoothMod!(bism,ism,widx,widy,sx,sy)
