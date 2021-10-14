@@ -1,5 +1,7 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
+using utils
 import FITSIO
+import ImageFiltering
 
 """
     read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
@@ -142,8 +144,8 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; 
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
     while any(maskim2) .& (cnt .< 10)
-        in_image = padarray(testim,Pad(:reflect,(Δ+2,Δ+2)));
-        in_mask = padarray(.!maskim,Pad(:reflect,(Δ+2,Δ+2)));
+        in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
+        in_mask = ImageFiltering.padarray(.!maskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
 
         boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
         boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
