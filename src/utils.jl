@@ -42,7 +42,7 @@ function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
     cov = zeros(Nstar,Np*Np,Np*Np)
     μ = zeros(Nstar,Np*Np)
 
-    in_image = padarray(img,Pad(:reflect,(Np+Δx+2,Np+Δy+2)));
+    in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+2,Np+Δy+2)));
     bism = copy(img)
     bimage = copy(img)
 
