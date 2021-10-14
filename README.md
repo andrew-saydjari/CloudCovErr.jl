@@ -6,6 +6,10 @@
 
 Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background.
 
+## Documentation
+
+Detailed documentation can be found [here]([docs-dev-url]).
+
 <!-- URLS -->
 [action-img]: https://github.com/andrew-saydjari/disCovErr.jl/workflows/Unit%20test/badge.svg
 [action-url]: https://github.com/andrew-saydjari/disCovErr.jl/actions
