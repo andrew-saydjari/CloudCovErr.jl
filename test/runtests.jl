@@ -3,6 +3,7 @@ using disCovErr
 
 tests = [
     "tst_utils.jl",
+    "tst_decam.jl"
 ]
 
 for t in tests

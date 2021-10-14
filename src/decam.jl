@@ -1,37 +1,43 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
+import FITSIO
 
-#
+"""
+    read_decam(base,date,filt,vers,ccd)
 
-# date = "170420_040428"
-# key = "N14"
-# filt = "g"
-#
-# base = "/n/fink2/decaps/c4d_"
-# vers = "v1"
-#
-# f = FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
-# ref_im = read(f[key])
-# close(f)
-# f = FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
-# d_im = read(f[key])
-# close(f)
-#
-# f = FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
-# w_im = read(f[key])
-# close(f)
-#
+Read in raw image files associated with exposures obtain on the DarkEnergyCamera.
+Returns the image, a weighting image, and a quality flag mask image. See [NOAO
+handbook](http://ast.noao.edu/sites/default/files/NOAO_DHB_v2.2.pdf) for more details
+on what is contained in each file and how they are obtained.
+
+# Arguments:
+- `base`: parent directory and file name prefix for exposure files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `ccd`: which ccd we are pulling the image for
+
+# Example
+```julia
+ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
+```
+
+"""
+function read_decam(base,date,filt,vers,ccd)
+    f = FITSIO.FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
+    ref_im = read(f[ccd])
+    close(f)
+    f = FITSIO.FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
+    w_im = read(f[ccd])
+    close(f)
+    f = FITSIO.FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
+    d_im = read(f[ccd])
+    close(f)
+    return ref_im, w_im, d_im
+end
+
 # f = FITS("/n/home12/saydjari/finksagescratch/decaps/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
 # x_stars = read(f[key*"_CAT"],"x")
 # y_stars = read(f[key*"_CAT"],"y")
-# flux_stars = read(f[key*"_CAT"],"flux")
-# dflux_stars = read(f[key*"_CAT"],"dflux")
-# fracflux_stars = read(f[key*"_CAT"],"fracflux")
-# flags_stars = read(f[key*"_CAT"],"flags")
-# pN_stars = read(f[key*"_CAT"],"prN")
-# pL_stars = read(f[key*"_CAT"],"prL")
-# pR_stars = read(f[key*"_CAT"],"prR")
-# pE_stars = read(f[key*"_CAT"],"prE")
-# pno_stars = read(f[key*"_CAT"],"passno")
 # close(f)
 #
 # f = FITS("/n/home12/saydjari/finksagescratch/decaps/mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
@@ -39,496 +45,7 @@
 # sky_im = read(f[key*"_SKY"])
 # msk_im = read(f[key*"_MSK"])
 # close(f)
-#
-# diffuse = flags_stars .& 2^21
-# brightstar = flags_stars .& 2^23
-# galaxy = flags_stars .& 2^24
-#
-# # Plotting WU
-# fig = plt.figure(figsize=(16,8), dpi=150)
-# plt.subplots_adjust(wspace=0.2,hspace=0.1)
-# plt.suptitle(date*" "*filt*" "*key,y=0.91,fontsize=14)
-# ax = fig.add_subplot(2,2,1)
-# input = ref_im .-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.scatter(x_stars,y_stars,s=1,color="red", edgecolor="none",alpha=1)
-# ax.set_title("Image")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# ax = fig.add_subplot(2,2,2)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.scatter(x_stars,y_stars,s=1,c=diffuse,edgecolor="none",alpha=1,cmap="cet_bkr_r")
-# ax.set_title("Nebulous Mask")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# ax = fig.add_subplot(2,2,3)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.scatter(x_stars,y_stars,s=1,c=galaxy,edgecolor="none",alpha=1,cmap="cet_bkr_r")
-# ax.set_title("Galaxy Mask")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# ax = fig.add_subplot(2,2,4)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.scatter(x_stars,y_stars,s=1,c=brightstar,edgecolor="none",alpha=1,cmap="cet_bkr_r")
-# ax.set_title("Bright Stars Mask")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# #
-# fig = plt.figure(figsize=(16,8), dpi=150)
-# plt.subplots_adjust(wspace=0.2,hspace=0.1)
-# plt.suptitle(date*" "*filt*" "*key,y=0.91,fontsize=14)
-# ax = fig.add_subplot(2,2,1)
-# input = ref_im .-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=2,c=pN_stars,edgecolor="none",alpha=1,cmap="cet_bgy")
-# ax.set_title("Nebulosity Probability")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc, cax=cax)
-#
-# ax = fig.add_subplot(2,2,2)
-# input = ref_im .-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=2,c=pL_stars,edgecolor="none",alpha=1,cmap="cet_bgy")
-# ax.set_title("Nebulosity Light Probability")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc, cax=cax)
-#
-# ax = fig.add_subplot(2,2,3)
-# input = ref_im .-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=2,c=pR_stars,edgecolor="none",alpha=1,cmap="cet_bgy")
-# ax.set_title("Regular Probability")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc, cax=cax)
-#
-# ax = fig.add_subplot(2,2,4)
-# input = ref_im .-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=2,c=pE_stars,edgecolor="none",alpha=1,cmap="cet_bgy")
-# ax.set_title("Error Probability")
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-#
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc, cax=cax)
-#
-# #
-# x_limit = 700
-# y_limit = 600
-# sizef = 300
-# sp = 2
-#
-# fig = plt.figure(figsize=(16,8), dpi=150)
-# fig.subplots_adjust(wspace=0.1, hspace=0.1)
-# plt.suptitle("Subimage "*date*" "*filt*" "*key,y=0.965,fontsize=14)
-# #First the reference info
-# ax = fig.add_subplot(2,4,5)
-# input = ref_im.-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Raw Image")
-#
-# ax = fig.add_subplot(2,4,2)
-# input = msk_im
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1",
-#     aspect="equal",
-#     vmin=0,
-#     vmax=1
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Neb Mask")
-#
-#
-# ax = fig.add_subplot(2,4,3)
-# ax.imshow(
-#     w_im,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Weights")
-#
-# ax = fig.add_subplot(2,4,4)
-# ax.imshow(
-#     d_im,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_fire",
-#     aspect="equal",
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Bitmask")
-#
-# ax = fig.add_subplot(2,4,1)
-# input = ref_im.-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.plot(x_stars,y_stars,"r.",ms=sp)
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Stars")
-#
-# ax = fig.add_subplot(2,4,6)
-# input = mod_im.-median(mod_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-#
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Model")
-#
-# ax = fig.add_subplot(2,4,7)
-# resid = mod_im.-ref_im
-# input = resid
-#
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_bkr",
-#     aspect="equal",
-#     vmin = -50,
-#     vmax = 50
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Residuals")
-#
-# ax = fig.add_subplot(2,4,8)
-# input = sky_im.-median(sky_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Background");
-#
-# #
-# sizef = 500
-#
-# fig = plt.figure(figsize=(12,8), dpi=150)
-# fig.subplots_adjust(wspace=0.2, hspace=0.1)
-# plt.suptitle(date*" "*filt*" "*key, y=0.82,fontsize=14)
-#
-# ax = fig.add_subplot(1,2,1)
-# maxiter = maximum(pno_stars)
-# cmap = plt.get_cmap("tab10", Int(maxiter+1))
-# input = ref_im.-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=5,c=pno_stars,cmap=cmap, edgecolor="none",alpha=1)
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("Deblending Order")
-#
-# norm2 = plt.matplotlib.colors.Normalize(vmin=0,vmax=maxiter+1)
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# cbar = ax.figure.colorbar(
-#             plt.matplotlib.cm.ScalarMappable(norm=norm2, cmap=cmap),
-#             #boundaries=0:10-0.5,
-#             ticks=collect(-0.5 .+ (0:maxiter+1)),
-#             cax=cax)#
-# cbar.ax.set_yticklabels(collect(-1:maxiter));
-#
-# ax = fig.add_subplot(1,2,2)
-# input = ref_im.-median(ref_im)
-# ax.imshow(
-#     input,
-#     origin="lower",
-#     interpolation="nearest",
-#     cmap="cet_CET_L1_r",
-#     aspect="equal",
-#     vmin=-50,
-#     vmax=50
-# )
-# sc = ax.scatter(x_stars,y_stars,s=5,c=fracflux_stars,cmap="cet_bgy", vmin=0,vmax=1, edgecolor="none",alpha=1)
-# ax.axes.xaxis.set_ticks([])
-# ax.axes.yaxis.set_ticks([])
-# ax.set_xlim((x_limit,x_limit+sizef))
-# ax.set_ylim((y_limit,y_limit+sizef))
-# ax.set_title("FracFlux")
-#
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc, cax=cax)
-#
-# #
-# f = FITS("/n/home12/saydjari/finksage/Working/2021_10_07/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
-# x_stars0 = read(f[end-3],"x")
-# y_stars0 = read(f[end-3],"y")
-# flux_stars0 = read(f[end-3],"flux")
-# x_stars = read(f[end],"x")
-# y_stars = read(f[end],"y")
-# flux_stars = read(f[end],"flux")
-# dflux_stars = read(f[end],"dflux")
-# key = split(read_header(f[end])["EXTNAME"],"_")[1]
-# close(f)
-#
-# #
-# i=1
-# l=0
-# d=0
-#
-# merged_cat = []
-# merged_ideal_cat = []
-# merged_ideal_cat_full = []
-# detected_mask = []
-#
-# d_cutoff = 3^2
-#
-# key_ind=0
-# for k=1:size(x_stars0)[1]
-#     dist = (x_stars.-x_stars0[k]).^2 .+ (y_stars.-y_stars0[k]).^2
-#     ind = dist .< d_cutoff
-#     if count(ind) == 1
-#         pos = findall(ind)
-#         push!(detected_mask,1)
-#         push!(merged_cat, vec([key_ind i k x_stars[ind] y_stars[ind] flux_stars[ind] dflux_stars[ind] dist[ind] pos]))
-#         push!(merged_ideal_cat, vec([key_ind i k x_stars0[k] y_stars0[k] flux_stars0[k]]))
-#         push!(merged_ideal_cat_full, vec([key_ind i k x_stars0[k] y_stars0[k] flux_stars0[k]]))
-#     elseif count(ind) > 1
-#         #println("2 matches")
-#         push!(detected_mask,0)
-#         push!(merged_ideal_cat_full, vec([key_ind i k x_stars0[k] y_stars0[k] flux_stars0[k]]))
-#         d+=1
-#     else
-#         #println("no matches")
-#         push!(detected_mask,0)
-#         push!(merged_ideal_cat_full, vec([key_ind i k x_stars0[k] y_stars0[k] flux_stars0[k]]))
-#         l+=1
-#     end
-#     i+=1
-# end
-#
-# detected_mask1 = convert(BitArray,detected_mask)
-# merged_ideal_cat_full1 = hcat(merged_ideal_cat_full...)
-# merged_ideal_cat1 = hcat(merged_ideal_cat...)
-# merged_cat1 = hcat(merged_cat...)
-#
-# println("Total Num Stars: "*string(i-1))
-# println("No Matches: "*string(l))
-# println("Too Many Matches: "*string(d))
-# println("Total Good: "*string(i-1-d-l))
-#
-# #
-# fig = plt.figure(figsize=(24,16), dpi=150)
-# fig.subplots_adjust(wspace=0.3, hspace=0.2)
-# lperc = 2
-# hperc = 97
-#
-# ax = fig.add_subplot(2,3,1)
-# plt.suptitle(date*" "*filt*" "*key, y=0.92,fontsize=14)
-# maskpos = flux_stars.>0;
-#
-# data = (-2.5*log10.(flux_stars[maskpos]).+zpdic[filt])
-# ax.hist(data,bins=50,alpha=0.5,range=(16.5,24.5));
-# ax.set_xlabel("Mags")
-# ax.set_title("Distribution of Stellar Flux")
-#
-# ax = fig.add_subplot(2,3,4)
-# maskpos = merged_cat1[6,:].>0;
-#
-# data = (-2.5*log10.(merged_cat1[6,maskpos]).+zpdic[filt])
-# ax.hist(data,bins=50,alpha=0.5,range=(16.5,24.5),histtype="step");
-#
-# maskpos1 = merged_ideal_cat1[6,:].>0;
-#
-# data = (-2.5*log10.(merged_ideal_cat1[6,maskpos1]).+zpdic[filt])
-# ax.hist(data,bins=50, alpha=0.5, range=(16.5,24.5),histtype="step");
-#
-# ax.legend(["Recovered", "Inserted"],loc="upper left")
-# ax.set_xlabel("Mags")
-#
-# diffy = (merged_cat1[6,:].-merged_ideal_cat1[6,:]);
-# zdiff = 100 .*diffy./maximum(hcat(merged_cat1[6,:],merged_ideal_cat1[6,:]),dims=2);
-# fluxiqr = StatsBase.iqr(zdiff[:])
-# lower, upper = (-10,10)
-#
-# maskpos = (merged_cat1[6,:].>0) .& (merged_ideal_cat1[6,:].>0);
-#
-# ax = fig.add_subplot(2,3,2)
-# ax.hist(zdiff[:],bins=100,alpha=0.5,density=true,range=(lower, upper));
-# ax.set_xlim([lower,upper])
-# ax.set_title("Distribution of Percent Errors")
-# ax.set_xlabel("Percent Diff")
-# ax.set_ylabel("Density")
-# ax.legend([" IQR = "*string(round(fluxiqr,digits = 2))*" \n Std = "*string(round(StatsBase.std(zdiff),digits = 2))*" \n Med = "*string(round(median(zdiff),digits = 2))])
-#
-# ax = fig.add_subplot(2,3,5)
-# sc = ax.hist2d(zdiff[maskpos], -2.5*log10.(merged_cat1[6,maskpos]).+zpdic[filt],
-#     bins=[100,100],
-#     range=[(lower,upper),(16.5,24.5)],
-#     cmap="cet_fire",
-# )
-# ax.set_ylabel("Observed Mags")
-# ax.set_xlabel("Percent Difference")
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc[4], cax=cax)
-#
-# diffy_a = diffy .- median(zdiff)/100 .*maximum(hcat(merged_cat1[6,:],merged_ideal_cat1[6,:]),dims=2)
-# errbars_floor = sqrt.(merged_cat1[7,:].^2 .+ 0.0001.*merged_cat1[6,:].^2)
-# zdiffo = diffy_a./errbars_floor
-# nan_mask_o = .!isnan.(zdiffo)
-# lowerp, upperp = StatsBase.percentile(zdiffo[nan_mask_o],[lperc,hperc])
-#
-# ax = fig.add_subplot(2,3,3)
-# ax.hist(zdiffo[nan_mask_o],bins=100,alpha=0.5,density=true,range=(lowerp, upperp));
-# ax.set_xlim([lowerp,upperp])
-# ax.set_title("Distribution of Z-Scores")
-# ax.set_xlabel("Z-Score")
-# ax.set_ylabel("Density")
-# ax.legend([" IQR = "*string(round(StatsBase.iqr(zdiffo[nan_mask_o]),digits = 2))*" \n Std = "*string(round(StatsBase.std(zdiffo[nan_mask_o]),digits = 2))*" \n Med = "*string(round(median(zdiffo[nan_mask_o]),digits = 2))])
-#
-# ax = fig.add_subplot(2,3,6)
-# sc = ax.hist2d(zdiffo[nan_mask_o], -2.5*log10.(merged_cat1[6,maskpos]).+zpdic[filt],
-#     bins=[100,100],
-#     range=[(lowerp,upperp),(16.5,24.5)],
-#     cmap="cet_fire",
-# )
-# ax.set_ylabel("Observed Mags")
-# ax.set_xlabel("Z-Score")
-# cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
-# plt.colorbar(sc[4], cax=cax)
-#
+
 # #
 # thr = 20
 # data_w = deepcopy(w_im)
@@ -567,7 +84,7 @@
 # skyim3 = deepcopy(sky_im)[550:1400,550:1750];
 
 """
-    prelim_infill!(ind)
+    prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; widx = 19, widy=19)
 
 This intial infill replaces masked pixels with a guess based on a smoothed
 boxcar. For large masked regions, the smoothing scale is increased. If this
