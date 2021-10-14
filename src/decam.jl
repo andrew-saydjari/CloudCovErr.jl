@@ -73,42 +73,23 @@ function read_crowdsource(base,date,filt,vers,ccd)
     return x_stars, y_stars, decapsid, gain, mod_im, sky_im
 end
 
-# #
-# thr = 20
-# data_w = deepcopy(w_im)
-# rad=255
-# maskd = (data_w.<=0.0002) .| (d_im .!= 0);
-# for i=1:size(x_stars)[1]
-#     fluxt=flux_stars[i]
-#     if fluxt .> 1e4
-#         x_star = round(Int64, x_stars[i])
-#         y_star = round(Int64, y_stars[i])
-#         mskt = (psf0 .> thr/(fluxt))[maximum([1,1+rad-y_star]):minimum([2046-y_star+rad,511]),maximum([1,1+rad-x_star]):minimum([4094-x_star+rad,511])]
-#         maskd[maximum([1,1+y_star-rad]):minimum([1+y_star+rad,2046]),maximum([1,1+x_star-rad]):minimum([1+x_star+rad,4094])] .|= mskt
-#     end
-# end
-# resid = deepcopy(mod_im.-ref_im);
-# resid[maskd] .= NaN;
-#
+function gen_mask_staticPSF(psfstamp, thr=20)
+    (sx, sy) = size(psfstamp)
+    rad=255
+    maskd = (data_w.<=0.0002) .| (d_im .!= 0);
+    for i=1:size(x_stars)[1]
+        fluxt=flux_stars[i]
+        if fluxt .> 1e4
+            x_star = round(Int64, x_stars[i])
+            y_star = round(Int64, y_stars[i])
+            mskt = (psf0 .> thr/(fluxt))[maximum([1,1+rad-y_star]):minimum([2046-y_star+rad,511]),maximum([1,1+rad-x_star]):minimum([4094-x_star+rad,511])]
+            maskd[maximum([1,1+y_star-rad]):minimum([1+y_star+rad,2046]),maximum([1,1+x_star-rad]):minimum([1+x_star+rad,4094])] .|= mskt
+        end
+    end
+end
+
 # mask0 =maskd;
 # mask = convert.(Int64,.!mask0);
-#
-# testim = deepcopy(mod_im.-ref_im)[550:1400,550:1750];
-# testim0 = deepcopy(mod_im.-ref_im)[550:1400,550:1750];
-# skyim = deepcopy(ref_im[550:1400,550:1750].-(mod_im[550:1400,550:1750].-sky_im[550:1400,550:1750]))
-# skyim0 = deepcopy(ref_im[550:1400,550:1750].-(mod_im[550:1400,550:1750].-sky_im[550:1400,550:1750]))
-# maskim = deepcopy(mask)[550:1400,550:1750];
-# maskim0 = deepcopy(mask0)[550:1400,550:1750];
-# data_w = deepcopy(data_w)[550:1400,550:1750];
-#
-# skyim[maskim0] .= 0;
-# testim2 = deepcopy(testim);
-# skyim2 = deepcopy(skyim);
-# maskim2 = deepcopy(maskim0);
-# ref_im0 = ref_im[550:1400,550:1750];
-# mod_im0 = mod_im[550:1400,550:1750];
-# gain = median(data_w.*ref_im[550:1400,550:1750])
-# skyim3 = deepcopy(sky_im)[550:1400,550:1750];
 
 """
     prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; widx = 19, widy=19)

@@ -4,6 +4,7 @@ module disCovErr
     export per_star
     export per_star_stats
     export prelim_infill!
+    export add_sky_noise!
 
     include("utils.jl")
     include("decam.jl")
