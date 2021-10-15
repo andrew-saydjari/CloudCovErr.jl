@@ -73,23 +73,39 @@ function read_crowdsource(base,date,filt,vers,ccd)
     return x_stars, y_stars, decapsid, gain, mod_im, sky_im
 end
 
-function gen_mask_staticPSF(psfstamp, thr=20)
-    (sx, sy) = size(psfstamp)
-    rad=255
-    maskd = (data_w.<=0.0002) .| (d_im .!= 0);
-    for i=1:size(x_stars)[1]
+"""
+    gen_mask_staticPSF!(maskd, psfstamp, x_stars, y_stars, flux_stars, thr=20)
+
+Generate a mask for an input image (which is usually an image of model residuals)
+that excludes the cores of stars (which are often mismodeled). In this function,
+we use a fixed PSF `psfstamp` for all sources, and adjust the masking fraction based on the
+stellar flux and a threshold `thr`. A more general position dependent PSF model could be
+used with a slight generalization of this function, but is likely overkill for the problem
+of making a mask.
+
+# Arguments:
+- `maskd`: bool image to which mask will be added (bitwise or)
+- `psfstamp`: simple 2D array of a single PSF to be used for the whole image
+- `x_stars`: list of source x positions
+- `y_stars`: list of source y positions
+- `flux_stars`: list of source fluxes
+- `thr`: threshold used for flux-dependent masking
+"""
+function gen_mask_staticPSF!(maskd, psfstamp, x_stars, y_stars, flux_stars, thr=20)
+    (sx, sy) = size(maskd)
+    (psx, psy) = size(psfstamp)
+    Δx = (psx-1)÷2
+    Δy = (psy-1)÷2
+    Nstar = size(x_stars)[1]
+    # assumes x/y_star is one indexed
+    for i=1:Nstar
         fluxt=flux_stars[i]
-        if fluxt .> 1e4
-            x_star = round(Int64, x_stars[i])
-            y_star = round(Int64, y_stars[i])
-            mskt = (psf0 .> thr/(fluxt))[maximum([1,1+rad-y_star]):minimum([2046-y_star+rad,511]),maximum([1,1+rad-x_star]):minimum([4094-x_star+rad,511])]
-            maskd[maximum([1,1+y_star-rad]):minimum([1+y_star+rad,2046]),maximum([1,1+x_star-rad]):minimum([1+x_star+rad,4094])] .|= mskt
-        end
+        x_star = round(Int64, x_stars[i])
+        y_star = round(Int64, y_stars[i])
+        mskt = (psfstamp .> thr/(fluxt))[maximum([1,Δx-y_star]):minimum([sx-y_star+Δx,psx]),maximum([1,Δy-x_star]):minimum([sy-x_star+Δy,psy])]
+        maskd[maximum([1,y_star-Δx]):minimum([y_star+Δx,sx]),maximum([1,x_star-Δy]):minimum([x_star+Δy,sy])] .|= mskt
     end
 end
-
-# mask0 =maskd;
-# mask = convert.(Int64,.!mask0);
 
 """
     prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; widx = 19, widy=19)

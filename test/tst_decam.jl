@@ -18,7 +18,12 @@ module decam_tests
         ttt_maskim2 = ones(Bool,2,2)
         ttt_skyim3 = 10*ones(2,2)
         add_sky_noise!(ttt_testim2,ttt_maskim2,ttt_skyim3,4,seed=2021)
-        @test ttt_testim2 == [1.5 1.5; 3.25 2.5]
+        @test ttt_testim2 == [0.25 2.25; 1.25 2.5]
 
+        psfstamp = zeros(31,31)
+        psfstamp[16,16] = 1
+        ttt_maskim2 = zeros(Bool,51,51);
+        gen_mask_staticPSF!(ttt_maskim2,psfstamp,[26],[26],[200])
+        @test ttt_maskim2[26,26]
     end
 end
