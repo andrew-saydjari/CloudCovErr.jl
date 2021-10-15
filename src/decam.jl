@@ -133,7 +133,7 @@ infill values.
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
 """
-function prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; widx = 19, widy=19)
+function prelim_infill!(testim,maskim,bimage,bimageI,testim2,maskim2,goodpix;widx=19,widy=19)
 
     wid = maximum([widx, widy])
     Δ = (wid-1)÷2
@@ -212,46 +212,35 @@ end
 # key="N14"
 # psfmodel0 = py"load_psfmodel"(outfn,key,filt)
 
-# """
-#     per_star_stats(cov_loc,cxx,cyy,μ,ind) -> per_star_stats()
-#
-#     A bunch o stats
-# """
-# function per_star_stats(cov_loc,cxx,cyy,μ,ind)
-#     Np = 33
-#     Npix = 65 #may be able to deprecate the cor stamp during the rewrite
-#     Nf = 9
-#     thr = 20
-#
-#     cy = round(Int64,cyy)
-#     cx = round(Int64,cxx)
-#
-#     radNp = (Np-1)÷2
-#     radNf = (Nf-1)÷2
-#
-#     Nmp = (Npix-1)÷2
-#     Nm = Np÷2+1
-#
-#     cor_stamp = cx-(Nmp):cx+Nmp,cy-(Nmp):cy+Nmp
-#     cov_stamp = Nmp-radNp+1:Nmp+radNp+1,Nmp-radNp+1:Nmp+radNp+1
-#     psf_stamp = Nmp-radNf+1:Nmp+radNf+1,Nmp-radNf+1:Nmp+radNf+1
-#     psf_stamp2 = (radNp)-radNf+1:(radNp)+radNf+1,(radNp)-radNf+1:(radNp)+radNf+1
-#
-#     @views stars_cut = (mod_im0.-skyim3)[cor_stamp[1],cor_stamp[2]]
-#     @views stars_in = stars_cut[cov_stamp[1],cov_stamp[2]][:]
-#
-#     @views mask_cut = maskim0[cor_stamp[1],cor_stamp[2]]
-#     @views kmasked2d = mask_cut[cov_stamp[1],cov_stamp[2]];
-#
-#     cntk cntks dnt
-#     trial
-#
-#     @views data_in = testim2[cor_stamp[1],cor_stamp[2]]
-#     @views uncond_input = data_in[cov_stamp[1],cov_stamp[2]][:]
-#     @views cond_input = data_in[cov_stamp[1],cov_stamp[2]][:].- μ
-#
-#     @views data_w_cut = data_w[cov_stamp[1],cov_stamp[2]]
-# end
+"""
+    stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33) -> data_in, data_w, stars_in, kmasked2d
+
+Cuts out local stamps around each star of the various input images to be used for
+per star statistics calculations.
+
+# Arguments:
+- `cxx`: center coorindate x of the stamp
+- `cyy`: center coorindate y of the stamp
+- `residimIn`: residual image with infilling from which covariance was estimated
+- `w_im`: input weight image
+- `mod_im`: input model image
+- `skyim`: input image of sky background
+- `maskim`: input image of masked pixels
+- `Np`: size of covariance matrix footprint around each star
+"""
+function stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33)
+    cx = round(Int64,cxx)
+    cy = round(Int64,cyy)
+    radNp = (Np-1)÷2
+
+    cov_stamp = cx-radNp:cx+radNp,cy-radNp:cy+radNp
+    @views data_in = residimIn[cov_stamp[1],cov_stamp[2]]
+    @views data_w = w_im[cov_stamp[1],cov_stamp[2]]
+    @views stars_in = (mod_im.-skyim)[cov_stamp[1],cov_stamp[2]]
+    @views kmasked2d = maskim[cov_stamp[1],cov_stamp[2]];
+
+    return data_in, data_w, stars_in, kmasked2d
+end
 
 function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33)
 

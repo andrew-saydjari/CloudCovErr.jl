@@ -7,6 +7,7 @@ module disCovErr
     export add_sky_noise!
     export gen_mask_staticPSF!
     export condCovEst_wdiag
+    export stamp_cutter
 
     include("utils.jl")
     include("decam.jl")

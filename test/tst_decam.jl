@@ -61,7 +61,15 @@ module decam_tests
         0.0330318  0.0403823  0.0339776;
         0.0301219  0.033388   0.0255433;
         ]
-        @test condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft) ≈ [133.725  132.769  5.59213e-5  -10.7856  0.906103  4.94119e-5]
+        @test all((condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft) .- [133.725  132.769  5.59213e-5  -10.7856  0.906103  4.94119e-5]) .< 1e-2)
 
+        ttt_residimIn = ones(51,51)
+        ttt_maskim = zeros(Bool,51,51)
+        ttt_maskim[26,26] = true
+        ttt_w_im = ones(51,51)
+        ttt_mod_im = ones(51,51)
+        ttt_skyim = ones(51,51);
+        data_in, data_w, stars_in, kmasked2d = stamp_cutter(26.1,26.1,ttt_residimIn,ttt_w_im,ttt_mod_im,ttt_skyim,ttt_maskim)
+        @test kmasked2d[17,17]
     end
 end
