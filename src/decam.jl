@@ -301,7 +301,7 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
 
-    cov_r = Symmetric(cov_loc) + diagm(stars_in[:])
+    cov_r = Symmetric(cov_loc) + diagm(0 => stars_in[:])
     cov_kk = Symmetric(cov_r[k,k])
     cov_kstark = cov_r[kstar,k];
     cov_kstarkstar = Symmetric(cov_r[kstar,kstar]);
