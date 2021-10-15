@@ -273,38 +273,6 @@ end
 #
 #     @views mask_cut = maskim0[cor_stamp[1],cor_stamp[2]]
 #     @views kmasked2d = mask_cut[cov_stamp[1],cov_stamp[2]];
-#     kmasked2d = mask_cut[cov_stamp[1],cov_stamp[2]] #these are masked from dim or other stars
-#
-#     psft = psfmodel0(cyy,cxx,33)'
-#
-#     if calflux[ind] < 1e4  #these are the pixels we want the cov of
-#         kpsf2d = (psft .> thr/1e4)
-#     else
-#         kpsf2d = (psft .> thr/calflux[ind])
-#     end
-#
-#     kstar = (kmasked2d .| kpsf2d)[:]
-#     k = .!kstar;
-#
-#     cntk = count(k)
-#     cntks = count(kstar)
-#
-#     dnt = 0
-#     if cntk < 128 #this is about a 10% cut, it is actually the sum of the outside bndry in my mind
-#         dnt = 1
-#         kmasked2d[1,:] .= 0
-#         kmasked2d[end,:] .= 0
-#         kmasked2d[:,1] .= 0
-#         kmasked2d[:,end] .= 0
-#
-#         kpsf2d[1,:] .= 0
-#         kpsf2d[end,:] .= 0
-#         kpsf2d[:,1] .= 0
-#         kpsf2d[:,end] .= 0
-#
-#         kstar = (kmasked2d .| kpsf2d)[:]
-#         k = .!kstar;
-#     end
 #
 #     cntk cntks dnt
 #     trial
@@ -315,6 +283,37 @@ end
 #
 #     @views data_w_cut = data_w[cov_stamp[1],cov_stamp[2]]
 # end
+
+function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33)
+
+    psft = psfmodel(cx,cy,Np)
+
+    if flux_star < 1e4  #these are the pixels we want the cov of
+        kpsf2d = (psft .> thr/1e4)
+    else
+        kpsf2d = (psft .> thr/flux_star)
+    end
+
+    kstar = (kmasked2d .| kpsf2d)[:]
+    cntks = count(kstar)
+
+    dnt = 0
+    if cntk < 128 #this is about a 10% cut, and is the sum of bndry
+        dnt = 1
+        kmasked2d[1,:] .= 0
+        kmasked2d[end,:] .= 0
+        kmasked2d[:,1] .= 0
+        kmasked2d[:,end] .= 0
+
+        kpsf2d[1,:] .= 0
+        kpsf2d[end,:] .= 0
+        kpsf2d[:,1] .= 0
+        kpsf2d[:,end] .= 0
+
+        kstar = (kmasked2d .| kpsf2d)[:]
+    end
+    return psft, kstar, kpsf2d, cntks, dnt
+end
 
 """
     condCovEst_wdiag(cov_loc,μ,k,kstar,kpsf2d,data_in,data_w,stars_in) -> [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
@@ -339,11 +338,12 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,k,kstar,kpsf2d,data_in,data_w,stars_in)
+function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
+    k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
 
-    cov_r = Symmetric(cov_loc) + diagm(stars_in)
+    cov_r = Symmetric(cov_loc) + diagm(stars_in[:])
     cov_kk = Symmetric(cov_r[k,k])
     cov_kstark = cov_r[kstar,k];
     cov_kstarkstar = Symmetric(cov_r[kstar,kstar]);
@@ -371,4 +371,5 @@ function condCovEst_wdiag(cov_loc,μ,k,kstar,kpsf2d,data_in,data_w,stars_in)
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
 
     return [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
+end
 end

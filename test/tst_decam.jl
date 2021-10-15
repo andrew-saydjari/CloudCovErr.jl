@@ -61,7 +61,7 @@ module decam_tests
         0.0330318  0.0403823  0.0339776;
         0.0301219  0.033388   0.0255433;
         ]
-        @test condCovEst_wdiag(cov_loc,μ,k,kstar,kpsf2d,data_in,data_w,stars_in,psft) == [133.725  132.769  5.59213e-5  -10.7856  0.906103  4.94119e-5]
+        @test condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft) ≈ [133.725  132.769  5.59213e-5  -10.7856  0.906103  4.94119e-5]
 
     end
 end

@@ -6,6 +6,7 @@ module disCovErr
     export prelim_infill!
     export add_sky_noise!
     export gen_mask_staticPSF!
+    export condCovEst_wdiag
 
     include("utils.jl")
     include("decam.jl")
