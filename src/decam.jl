@@ -211,38 +211,7 @@ end
 # outfn = "/n/home12/saydjari/finksage/Working/2021_10_07/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
 # key="N14"
 # psfmodel0 = py"load_psfmodel"(outfn,key,filt)
-#
-#
-# #
-# out0 = @showprogress map(per_star,1:size(cx)[1]);
-#
-# cs_out_0=zeros(size(cx)[1],12)
-# for i=1:size(cx)[1]
-#     cs_out_0[i,:]=out0[i][1]
-# end
-#
-# stamps1=zeros(size(cx)[1],65,65)
-# for i=1:size(cx)[1]
-#     stamps1[i,:,:]=out0[i][2]
-# end
 
-
-# """
-#     per_star(ind) -> per_star_stats()
-#
-#     TBD
-# """
-# function per_star(ind)
-#     Np = 33
-#     # Mean Handling
-#
-#     cyy = cy[ind]
-#     cxx = cx[ind]
-#
-#     μ = μ_loc[ind,:]
-#     return per_star_stats(Symmetric(cov_loc[ind,:,:]),cxx,cyy,μ,ind)
-# end
-#
 # """
 #     per_star_stats(cov_loc,cxx,cyy,μ,ind) -> per_star_stats()
 #
@@ -371,5 +340,4 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
 
     return [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
-end
 end
