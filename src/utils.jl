@@ -32,12 +32,15 @@ may be singular (one should always keep `Np`^2 < `widx`*`widy`).
 - `widx`: size of sampled region in x used to estimate entries in the covariance matrix
 - `widy`: size of sampled region in y used to estimate the entries in the covariance matrix
 """
-function cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129)
+function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     Δx = (widx-1)÷2
     Δy = (widy-1)÷2
     halfNp = (Np-1) ÷ 2
-    (Nstar,) = size(cx)
+    (Nstar,) = size(cxx)
     (sx, sy) = size(img)
+
+    cx = round.(Int64,cxx)
+    cy = round.(Int64,cyy)
 
     # preallocate output covariance array
     Δr = zeros(Nstar)

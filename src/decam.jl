@@ -7,6 +7,33 @@ using Random
 using LinearAlgebra
 
 """
+    __int__()
+
+Builds the required python crowdsource dependency and exports the required load
+function for obtaining the position dependent psf to the python namespace.
+"""
+function __int__()
+    using PyCall
+    import Conda
+    Conda.pip_interop(true)
+    Conda.pip("install","crowdsourcephoto")
+
+    py"""
+    import crowdsource.psf as psfmod
+    from astropy.io import fits
+
+    def load_psfmodel(outfn, ccd, filter, pixsz=9):
+        f = fits.open(outfn)
+        psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
+        f.close()
+        psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
+        return psfmodel
+    """
+end
+
+# FIX ME: Is there a world where we should be using the S7 corrected
+# crowdsource imports... careful on the wt sqrt in that case though
+"""
     read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
 
 Read in raw image files associated with exposures obtain on the DarkEnergyCamera.
@@ -41,14 +68,14 @@ function read_decam(base,date,filt,vers,ccd)
 end
 
 """
-    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, decapsid, gain, mod_im, sky_im
+    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im
 
 Read in outputs of crowdsource, a photometric pipeline. To pair with an arbitrary
 photometric pipeline, an analogous read in function should be created. The relevant
 outputs are the model image (including the sources) so that we can produce the
 residual image, the sky/background model (no sources), and the coordinates of the stars.
 The survey id number is also readout of the pipeline solution file to help
-cross-validate matching of the disCovErr outputs and the original sources. The emperical
+cross-validate matching of the disCovErr outputs and the original sources. The empirical
 gain is read out of the header (for other photometric pipelines which don't perform this estiamte,
 the gain from DECam is likely sufficient).
 
@@ -63,6 +90,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     f = FITSIO.FITS(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
     x_stars = FITSIO.read(f[ccd*"_CAT"],"x")
     y_stars = FITSIO.read(f[ccd*"_CAT"],"y")
+    flux_stars = FITSIO.read(f[ccd*"_CAT"],"flux")
     decapsid = FITSIO.read(f[ccd*"_CAT"],"decapsid")
     gain = FITSIO.read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
     FITSIO.close(f)
@@ -71,7 +99,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     mod_im = FITSIO.read(f[ccd*"_MOD"])
     sky_im = FITSIO.read(f[ccd*"_SKY"])
     FITSIO.close(f)
-    return x_stars, y_stars, decapsid, gain, mod_im, sky_im
+    return x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im
 end
 
 """
@@ -92,8 +120,8 @@ of making a mask.
 - `flux_stars`: list of source fluxes
 - `thr`: threshold used for flux-dependent masking
 """
-function gen_mask_staticPSF!(maskd, psfstamp, x_stars, y_stars, flux_stars, thr=20)
-    (sx, sy) = size(maskd)
+function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr=20)
+    (sx, sy) = size(bmaskd)
     (psx, psy) = size(psfstamp)
     Δx = (psx-1)÷2
     Δy = (psy-1)÷2
@@ -104,7 +132,7 @@ function gen_mask_staticPSF!(maskd, psfstamp, x_stars, y_stars, flux_stars, thr=
         x_star = round(Int64, x_stars[i])
         y_star = round(Int64, y_stars[i])
         mskt = (psfstamp .> thr/(fluxt))[maximum([1,Δx-y_star]):minimum([sx-y_star+Δx,psx]),maximum([1,Δy-x_star]):minimum([sy-x_star+Δy,psy])]
-        maskd[maximum([1,y_star-Δx]):minimum([y_star+Δx,sx]),maximum([1,x_star-Δy]):minimum([x_star+Δy,sy])] .|= mskt
+        bmaskd[maximum([1,y_star-Δx]):minimum([y_star+Δx,sx]),maximum([1,x_star-Δy]):minimum([x_star+Δy,sy])] .|= mskt
     end
 end
 
@@ -133,7 +161,7 @@ infill values.
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
 """
-function prelim_infill!(testim,maskim,bimage,bimageI,testim2,maskim2,goodpix;widx=19,widy=19)
+function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;widx=19,widy=19)
 
     wid = maximum([widx, widy])
     Δ = (wid-1)÷2
@@ -141,21 +169,21 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2,maskim2,goodpix;wid
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
     testim[maskim] .= 0;
-    maskim2 .= copy(maskim)
+    bmaskim2 .= copy(bmaskim)
     testim2 .= copy(testim)
 
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
     while any(maskim2) .& (cnt .< 10)
         in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
-        in_mask = ImageFiltering.padarray(.!maskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
+        in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
 
         disCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
         disCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
 
-        goodpix = (bimageI .> 10)
+        goodpix .= (bimageI .> 10)
 
-        testim2[maskim2 .& goodpix] .= (bimage./bimageI)[maskim2 .& goodpix]
+        testim2[bmaskim2 .& goodpix] .= (bimage./bimageI)[bmaskim2 .& goodpix]
         maskim2[goodpix] .= false
 
         # update loop params
@@ -168,7 +196,7 @@ function prelim_infill!(testim,maskim,bimage,bimageI,testim2,maskim2,goodpix;wid
 
     #catastrophic failure fallback
     if cnt == 10
-        testim2[maskim2] .= median(in_image)
+        testim2[bmaskim2] .= median(in_image)
         println("Infilling Failed Badly")
     end
     return
@@ -198,19 +226,24 @@ function add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
     end
 end
 
-# psf33 = py"psf0(0,0,stampsz=33)"
-#
-# py"""
-# def load_psfmodel(outfn, key, filter, pixsz=9):
-#     f = fits.open(outfn)
-#     psfmodel = psfmod.linear_static_wing_from_record(f[key+"_PSF"].data[0],filter=filter)
-#     f.close()
-#     psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
-#     return psfmodel
-# """
-# outfn = "/n/home12/saydjari/finksage/Working/2021_10_07/cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
-# key="N14"
-# psfmodel0 = py"load_psfmodel"(outfn,key,filt)
+"""
+    load_psfmodel_cs(base,date,filt,vers,ccd) -> psfmodel
+
+Julia wrapper function for the PyCall that reads the position dependent psfmodel
+produced by crowdsource from the catalogue file for a given exposure and ccd. The
+returned psfmodel takes an x- and y-position for the source location and the size
+of the desired psfstamp (the stamps are square and required to be odd).
+
+# Arguments:
+- `base`: parent directory and file name prefix for catalogue files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `ccd`: which ccd we are pulling the image for
+"""
+function load_psfmodel_cs(base,date,filt,vers,ccd)
+    return py"load_psfmodel"(base*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+end
 
 """
     stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33) -> data_in, data_w, stars_in, kmasked2d
@@ -256,7 +289,7 @@ function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33)
     cntks = count(kstar)
 
     dnt = 0
-    if cntk < 128 #this is about a 10% cut, and is the sum of bndry
+    if cntks > 33^2-128 #this is about a 10% cut, and is the sum of bndry
         dnt = 1
         kmasked2d[1,:] .= 0
         kmasked2d[end,:] .= 0
@@ -300,7 +333,7 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
-
+    #think about the gspice trick and invert cov_r, and then get cov_kk for free (condition on the kstar/k ratio)
     cov_r = Symmetric(cov_loc) + diagm(0 => stars_in[:])
     cov_kk = Symmetric(cov_r[k,k])
     cov_kstark = cov_r[kstar,k];
@@ -312,8 +345,8 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     @views uncond_input = data_in[:]
     @views cond_input = data_in[:].- μ
 
-    kstarpred = cov_kstark*icov_kk*cond_input[k] .+ μ[kstar]
     kstarpredn = cov_kstark*icov_kk*cond_input[k]
+    kstarpred = kstarpredn .+ μ[kstar]
     #This is not that impressive. chi2 of larger patch is more useful diagnostic
     chi20 = (kstarpredn'*ipcov*kstarpredn)
 
