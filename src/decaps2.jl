@@ -1,4 +1,5 @@
 using disCovErr
+using disCovErr.decam
 
 # should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20)
