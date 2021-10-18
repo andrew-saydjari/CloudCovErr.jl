@@ -151,8 +151,8 @@ function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr
         fluxt=flux_stars[i]
         x_star = round(Int64, x_stars[i])
         y_star = round(Int64, y_stars[i])
-        mskt = (psfstamp .> thr/(fluxt))[maximum([1,Δx-y_star]):minimum([sx-y_star+Δx,psx]),maximum([1,Δy-x_star]):minimum([sy-x_star+Δy,psy])]
-        bmaskd[maximum([1,y_star-Δx]):minimum([y_star+Δx,sx]),maximum([1,x_star-Δy]):minimum([x_star+Δy,sy])] .|= mskt
+        mskt = (psfstamp .> thr/(fluxt))[maximum([1,Δx-x_star]):minimum([sx-x_star+Δx,psx]),maximum([1,Δy-y_star]):minimum([sy-y_star+Δy,psy])]
+        bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= mskt
     end
 end
 
