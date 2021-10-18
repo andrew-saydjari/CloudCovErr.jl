@@ -1,7 +1,7 @@
 using disCovErr
 
 # should we be prellocating outside this subfunction?
-function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20)
+function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
     (sx, sy) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im = read_crowdsource(basecat,date,filt,vers,ccd)
@@ -30,7 +30,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20)
     cxx = x_stars[stars_interior]
     cyy = y_stars[stars_interior]
     cflux = flux_stars[stars_interior]
-    cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=33, widx=129, widy=129)
+    cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cx)
     star_stats = zeros(Nstars,6)
