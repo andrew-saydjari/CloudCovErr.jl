@@ -1,8 +1,12 @@
 ## utility functions
+module utils
+
 import OffsetArrays
 import ImageFiltering
 import ShiftedArrays
 import OffsetArrays
+
+export cov_construct
 
 """
     cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129) -> cov, μ
@@ -135,4 +139,5 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
             out[i+Δx,j+Δy] = tt
         end
     end
+end
 end

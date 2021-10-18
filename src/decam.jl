@@ -1,5 +1,23 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
-import disCovErr
+module decam
+
+export prelim_infill!
+export add_sky_noise!
+export gen_mask_staticPSF!
+export condCovEst_wdiag
+export stamp_cutter
+export read_decam
+export read_crowdsource
+export proc_ccd
+export gen_mask_staticPSF!
+export prelim_infill!
+export add_sky_noise!
+export load_psfmodel_cs
+export stamp_cutter
+export gen_pix_mask
+export condCovEst_wdiag
+
+using disCovErr.utils
 import FITSIO
 import ImageFiltering
 import Distributions
@@ -180,8 +198,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
         in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
         in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
 
-        disCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
-        disCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
+        boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
+        boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
 
         goodpix .= (bimageI .> 10)
 
@@ -364,4 +382,5 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
 
     return [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
+end
 end
