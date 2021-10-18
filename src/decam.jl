@@ -218,7 +218,7 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
 
     #catastrophic failure fallback
     if cnt == 10
-        testim2[bmaskim2] .= StatsBase.median(in_image)
+        testim2[bmaskim2] .= StatsBase.median(testim)
         println("Infilling Failed Badly")
     end
     return
