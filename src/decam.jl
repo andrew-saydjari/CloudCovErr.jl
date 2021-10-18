@@ -184,7 +184,7 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
         goodpix .= (bimageI .> 10)
 
         testim2[bmaskim2 .& goodpix] .= (bimage./bimageI)[bmaskim2 .& goodpix]
-        maskim2[goodpix] .= false
+        bmaskim2[goodpix] .= false
 
         # update loop params
         cnt+=1
@@ -242,7 +242,7 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `ccd`: which ccd we are pulling the image for
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
-    return py"load_psfmodel"(base*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    return py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
 end
 
 """
