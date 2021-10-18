@@ -6,6 +6,7 @@ import Distributions
 using Random
 using LinearAlgebra
 using PyCall
+import Conda
 
 """
     __int__()
@@ -14,8 +15,6 @@ Builds the required python crowdsource dependency and exports the required load
 function for obtaining the position dependent psf to the python namespace.
 """
 function __int__()
-    using PyCall
-    import Conda
     Conda.pip_interop(true)
     Conda.pip("install","crowdsourcephoto")
 
