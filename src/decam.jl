@@ -7,30 +7,30 @@ using Random
 using LinearAlgebra
 using PyCall
 
-# """
-#     __int__()
-#
-# Builds the required python crowdsource dependency and exports the required load
-# function for obtaining the position dependent psf to the python namespace.
-# """
-# function __int__()
-#     using PyCall
-#     import Conda
-#     Conda.pip_interop(true)
-#     Conda.pip("install","crowdsourcephoto")
-#
-#     py"""
-#     import crowdsource.psf as psfmod
-#     from astropy.io import fits
-#
-#     def load_psfmodel(outfn, ccd, filter, pixsz=9):
-#         f = fits.open(outfn)
-#         psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
-#         f.close()
-#         psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
-#         return psfmodel
-#     """
-# end
+"""
+    __int__()
+
+Builds the required python crowdsource dependency and exports the required load
+function for obtaining the position dependent psf to the python namespace.
+"""
+function __int__()
+    using PyCall
+    import Conda
+    Conda.pip_interop(true)
+    Conda.pip("install","crowdsourcephoto")
+
+    py"""
+    import crowdsource.psf as psfmod
+    from astropy.io import fits
+
+    def load_psfmodel(outfn, ccd, filter, pixsz=9):
+        f = fits.open(outfn)
+        psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
+        f.close()
+        psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
+        return psfmodel
+    """
+end
 
 # FIX ME: Is there a world where we should be using the S7 corrected
 # crowdsource imports... careful on the wt sqrt in that case though
