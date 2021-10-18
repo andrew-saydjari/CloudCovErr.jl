@@ -34,12 +34,12 @@ load_psfmodel = PyNULL()
 Builds the required python crowdsource dependency and exports the required load
 function for obtaining the position dependent psf to the python namespace.
 """
-function __int__()
+function __init__()
     Conda.pip_interop(true)
     Conda.pip("install","crowdsourcephoto")
 
     py"""
-    import crowdsource.psf as psfmod
+    import crowdsourcephoto.psf as psfmod
     from astropy.io import fits
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
