@@ -17,7 +17,7 @@ export stamp_cutter
 export gen_pix_mask
 export condCovEst_wdiag
 
-using disCovErr.utils
+import disCovErr
 import FITSIO
 import ImageFiltering
 import Distributions
@@ -199,8 +199,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
         in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
         in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
 
-        boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
-        boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
+        disCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy)
+        disCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy)
 
         goodpix .= (bimageI .> 10)
 

@@ -1,6 +1,4 @@
 ## utility functions
-module utils
-
 import OffsetArrays
 import ImageFiltering
 import ShiftedArrays
@@ -139,5 +137,4 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
             out[i+Δx,j+Δy] = tt
         end
     end
-end
 end
