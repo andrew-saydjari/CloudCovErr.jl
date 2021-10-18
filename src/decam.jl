@@ -26,7 +26,7 @@ using LinearAlgebra
 using PyCall
 import Conda
 
-const load_psfmodel = PyNULL()
+load_psfmodel = PyNULL()
 
 """
     __int__()
