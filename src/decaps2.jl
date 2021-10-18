@@ -32,7 +32,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     cflux = flux_stars[stars_interior]
     cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
-    (Nstars,) = size(cx)
+    (Nstars,) = size(cxx)
     star_stats = zeros(Nstars,6)
     for i=1:Nstars
         data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx,cyy,testim,w_im,mod_im,sky_im,bmaskd;Np=33)
