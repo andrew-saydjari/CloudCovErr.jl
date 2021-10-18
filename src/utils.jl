@@ -54,7 +54,7 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     bism = copy(img)
     bimage = copy(img)
 
-    Δr, Δc = cy.-(halfNp-1), cx.-(halfNp-1)
+    Δr, Δc = cx.-(halfNp-1), cy.-(halfNp-1)
 
     boxsmoothMod!(bimage,in_image,widx,widy,sx,sy)
     # loop over shifts
