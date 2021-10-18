@@ -29,6 +29,8 @@ function __int__()
         psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
         return psfmodel
     """
+
+    load_psfmodel=py"load_psfmodel"
 end
 
 # FIX ME: Is there a world where we should be using the S7 corrected
@@ -242,7 +244,7 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `ccd`: which ccd we are pulling the image for
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
-    return py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    return load_psfmodel(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
 end
 
 """
