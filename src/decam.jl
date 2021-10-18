@@ -26,8 +26,6 @@ using LinearAlgebra
 using PyCall
 import Conda
 
-load_psfmodel = PyNULL()
-
 """
     __int__()
 
@@ -41,6 +39,7 @@ function __init__()
     py"""
     import crowdsource.psf as psfmod
     from astropy.io import fits
+    from functools import partial
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
         f = fits.open(outfn)
@@ -49,7 +48,6 @@ function __init__()
         psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
         return psfmodel
     """
-    copy!(load_psfmodel,py"load_psfmodel")
 end
 
 # FIX ME: Is there a world where we should be using the S7 corrected
@@ -264,7 +262,12 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `ccd`: which ccd we are pulling the image for
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
-    return load_psfmodel(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    psfmodel_py = py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    function psfmodel_jl(x,y,sz)
+        # accounts for x, y ordering and 0 v 1 indexing between python and Julia
+        return psfmodel_py(y.-1,x.-1,sz)'
+    end
+    return psfmodel_jl
 end
 
 """
