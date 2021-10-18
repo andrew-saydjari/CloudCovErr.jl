@@ -39,7 +39,7 @@ function __init__()
     Conda.pip("install","crowdsourcephoto")
 
     py"""
-    import crowdsourcephoto.psf as psfmod
+    import crowdsource.psf as psfmod
     from astropy.io import fits
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
@@ -120,7 +120,8 @@ function read_crowdsource(base,date,filt,vers,ccd)
     mod_im = FITSIO.read(f[ccd*"_MOD"])
     sky_im = FITSIO.read(f[ccd*"_SKY"])
     FITSIO.close(f)
-    return x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im
+    #switch x, y order and compensate for 0 v 1 indexing between Julia and python
+    return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im
 end
 
 """
