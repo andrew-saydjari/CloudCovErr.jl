@@ -168,7 +168,7 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
     (sx, sy) = size(testim)
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
-    testim[maskim] .= 0;
+    testim[bmaskim] .= 0;
     bmaskim2 .= copy(bmaskim)
     testim2 .= copy(testim)
 
