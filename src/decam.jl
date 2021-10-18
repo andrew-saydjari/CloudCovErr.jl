@@ -26,7 +26,7 @@ using LinearAlgebra
 using PyCall
 import Conda
 
-load_psfmodel = PyNULL()
+const load_psfmodel = PyNULL()
 
 """
     __int__()
@@ -263,7 +263,7 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `ccd`: which ccd we are pulling the image for
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
-    return py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    return load_psfmodel(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
 end
 
 """
