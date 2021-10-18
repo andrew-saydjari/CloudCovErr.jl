@@ -37,7 +37,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20)
     for i=1:Nstars
         data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx,cyy,testim,w_im,mod_im,sky_im,bmaskd;Np=33)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,cxx,cyy,cflux;Np=33)
-        star_stats[i,:] .= condCovEst_wdiag(cov_loc[i,:,:],μ[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft)
+        star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end
     return star_stats
 end
