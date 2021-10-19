@@ -55,7 +55,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     # set up file
     f1 = FITSIO.FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
     f = FITSIO.FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","w")
-    FISIO.write(f,f1[0])
+    FITSIO.write(f,f1[0])
     close(f)
 
     # mask bad camera pixels/cosmic rays, then mask out star centers

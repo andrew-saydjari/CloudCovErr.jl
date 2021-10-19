@@ -343,7 +343,7 @@ end
 
 function save_fxn(w,base,date,filt,vers,ccd)
     f = FITSIO.FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,w)
+    FITSIO.write(f,w)
     close(f)
 end
 
