@@ -302,7 +302,7 @@ function stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33)
     return data_in, data_w, stars_in, kmasked2d
 end
 
-function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33)
+function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=thr)
 
     psft = psfmodel(x_star,y_star,Np)
 
