@@ -1,4 +1,40 @@
 using disCovErr
+using ArgParse
+using FITSIO #this should not be necessary
+
+function parse_commandline()
+    s=ArgParseSettings()
+    @add_arg_table s begin
+        "base"
+            required=true
+            arg_type=String
+            help="base directory containing raw exposure image files"
+        "date"
+            required=true
+            arg_type=String
+            help="file name date (exposure datetime)"
+        "filt"
+            required=true
+            arg_type=String
+            help="file name filter"
+        "vers"
+            required=true
+            arg_type=String
+            help="file name version"
+        "basecat"
+            required=true
+            arg_type=String
+            help="base directory containing crowdsource cat files"
+    end
+end
+
+function main()
+    parg = parse_commandline()
+    proc_ccd(parg["base"],parg["date"],parg["filt"],parg["vers"],
+        parg["basecat"],"N14",thr=parg["thr"],Np=parg["Np"])
+end
+
+main()
 
 # should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
@@ -49,12 +85,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     save_fxn(w,basecat,date,filt,vers,ccd)
 
     return w
-end
-
-function save_fxn(w,base,date,filt,vers,ccd)
-    f = FITSIO.FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,w)
-    close(f)
 end
 
 # need to write the wrapper function that loops over ccds (unfinished)
