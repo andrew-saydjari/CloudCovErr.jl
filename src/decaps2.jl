@@ -26,10 +26,10 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     add_sky_noise!(testim2,bmaskd,sky_im,gain;seed=rndseed)
     ## construct local covariance matrix
     # it would be nice if we handled bc well enough to not have to do the mask below
-    stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
-    cxx = x_stars[stars_interior]
-    cyy = y_stars[stars_interior]
-    cflux = flux_stars[stars_interior]
+    #stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
+    cxx = x_stars #[stars_interior]
+    cyy = y_stars #[stars_interior]
+    cflux = flux_stars #[stars_interior]
     cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cxx)
