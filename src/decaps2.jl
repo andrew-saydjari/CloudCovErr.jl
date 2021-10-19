@@ -52,6 +52,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
 
+    # set up file
+    f1 = FITSIO.FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+    f = FITSIO.FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","w")
+    FISIO.write(f,f1[0])
+    close(f)
+
     # mask bad camera pixels/cosmic rays, then mask out star centers
     bmaskd = (d_im .!= 0)
     gen_mask_staticPSF!(bmaskd, psfstatic, x_stars, y_stars, flux_stars; thr=thr)
