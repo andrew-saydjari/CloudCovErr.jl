@@ -26,6 +26,7 @@ using Random
 using LinearAlgebra
 using PyCall
 import Conda
+import Pkg
 
 """
     __int__()
@@ -36,6 +37,7 @@ function for obtaining the position dependent psf to the python namespace.
 function __init__()
     Conda.pip_interop(true)
     Conda.pip("install","crowdsourcephoto")
+    Pkg.build("PyCall")
     println(Conda.PYTHONDIR)
     println(Conda.ROOTENV)
     println(joinpath(dirname(pathof(PyCall))))
