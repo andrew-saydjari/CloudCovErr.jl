@@ -304,7 +304,7 @@ end
 
 function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33)
 
-    psft = psfmodel(cx,cy,Np)
+    psft = psfmodel(x_star,y_star,Np)
 
     if flux_star < 1e4  #these are the pixels we want the cov of
         kpsf2d = (psft .> thr/1e4)
