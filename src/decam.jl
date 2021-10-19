@@ -119,7 +119,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     decapsid = read(f[ccd*"_CAT"],"decapsid")
     gain = read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
     w = []
-    for col in colnames(f[ccd*"_CAT"])
+    for col in FITSIO.colnames(f[ccd*"_CAT"])
         push!(w,(col,read(f[ccd*"_CAT"],col)))
     end
     close(f)
