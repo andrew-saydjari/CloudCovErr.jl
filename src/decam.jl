@@ -20,7 +20,7 @@ export save_fxn
 export proc_ccd
 
 import disCovErr
-import FITSIO
+using FITSIO
 import ImageFiltering
 import Distributions
 import StatsBase
@@ -80,15 +80,15 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 
 """
 function read_decam(base,date,filt,vers,ccd)
-    f = FITSIO.FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
-    ref_im = FITSIO.read(f[ccd])
-    FITSIO.close(f)
-    f = FITSIO.FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
-    w_im = FITSIO.read(f[ccd])
-    FITSIO.close(f)
-    f = FITSIO.FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
-    d_im = FITSIO.read(f[ccd])
-    FITSIO.close(f)
+    f = FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
+    ref_im = read(f[ccd])
+    close(f)
+    f = FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
+    w_im = read(f[ccd])
+    close(f)
+    f = FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
+    d_im = read(f[ccd])
+    close(f)
     return ref_im, w_im, d_im
 end
 
@@ -112,22 +112,22 @@ the gain from DECam is likely sufficient).
 - `ccd`: which ccd we are pulling the image for
 """
 function read_crowdsource(base,date,filt,vers,ccd)
-    f = FITSIO.FITS(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
-    x_stars = FITSIO.read(f[ccd*"_CAT"],"x")
-    y_stars = FITSIO.read(f[ccd*"_CAT"],"y")
-    flux_stars = FITSIO.read(f[ccd*"_CAT"],"flux")
-    decapsid = FITSIO.read(f[ccd*"_CAT"],"decapsid")
-    gain = FITSIO.read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
+    f = FITS(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+    x_stars = read(f[ccd*"_CAT"],"x")
+    y_stars = read(f[ccd*"_CAT"],"y")
+    flux_stars = read(f[ccd*"_CAT"],"flux")
+    decapsid = read(f[ccd*"_CAT"],"decapsid")
+    gain = read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
     w = []
-    for col in FITSIO.colnames(f[ccd*"_CAT"])
-        push!(w,(col,FITSIO.read(f[ccd*"_CAT"],col)))
+    for col in colnames(f[ccd*"_CAT"])
+        push!(w,(col,read(f[ccd*"_CAT"],col)))
     end
-    FITSIO.close(f)
+    close(f)
 
-    f = FITSIO.FITS(base*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
-    mod_im = FITSIO.read(f[ccd*"_MOD"])
-    sky_im = FITSIO.read(f[ccd*"_SKY"])
-    FITSIO.close(f)
+    f = FITS(base*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
+    mod_im = read(f[ccd*"_MOD"])
+    sky_im = read(f[ccd*"_SKY"])
+    close(f)
     #switch x, y order and compensate for 0 v 1 indexing between Julia and python
     return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im, w
 end
@@ -343,8 +343,8 @@ function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=thr)
 end
 
 function save_fxn(w,base,date,filt,vers,ccd)
-    f = FITSIO.FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    FITSIO.write(f,w)
+    f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
+    write(f,w)
     close(f)
 end
 
@@ -417,9 +417,9 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
 
     # set up file
-    f1 = FITSIO.FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
-    f = FITSIO.FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","w")
-    FITSIO.write(f,[0], header=read_header(f1[1]))
+    f1 = FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+    f = FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","w")
+    write(f,[0], header=read_header(f1[1]))
     close(f)
 
     # mask bad camera pixels/cosmic rays, then mask out star centers
