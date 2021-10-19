@@ -4,7 +4,7 @@ using disCovErr
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
     (sx, sy) = size(ref_im)
-    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im = read_crowdsource(basecat,date,filt,vers,ccd)
+    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
@@ -26,24 +26,37 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     add_sky_noise!(testim2,bmaskd,sky_im,gain;seed=rndseed)
     ## construct local covariance matrix
     # it would be nice if we handled bc well enough to not have to do the mask below
-    #stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
-    cxx = x_stars #[stars_interior]
-    cyy = y_stars #[stars_interior]
-    cflux = flux_stars #[stars_interior]
+    # to do this would require cov_construct create images which are views and extend Nphalf beyond current boundaries
+    # need to implement before run
+    stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
+    cxx = x_stars[stars_interior]
+    cyy = y_stars[stars_interior]
+    cflux = flux_stars[stars_interior]
     cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cxx)
-    star_stats = zeros(Nstars,6)
+    star_stats = zeros(Nstars,7)
     for i=1:Nstars
         data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx[i],cyy[i],testim,w_im,mod_im,sky_im,bmaskd;Np=33)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,cxx[i],cyy[i],cflux[i];Np=33,thr=thr)
-        #println(size(vec(condCovEst_wdiag(cov_loc[i,:,:],μ[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))))
         star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end
-    return star_stats
+    # prepare for export by appending to cat dictionary
+    for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])
+        push!(w,(col,star_stats[:,ind]))
+    end
+
+    save_fxn(w,base,date,filt,vers,ccd)
+
+    return w
+end
+
+function save_fxn(w,base,date,filt,vers,ccd)
+    f = FITSIO.FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
+    write(f,w)
+    close(f)
 end
 
 # need to write the wrapper function that loops over ccds (unfinished)
-# need to write the FITS save function
-# need to think more about the memory preallocation
+# need to think more about the memory preallocation (probably not limiting factor)
 # commandline function access

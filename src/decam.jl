@@ -38,7 +38,7 @@ function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
         Conda.pip_interop(true)
         Conda.pip("install","crowdsourcephoto")
-        Pkg.build("PyCall")
+        # is this a pip v condaforge problem? maybe because of tensorflow?
     end
     py"""
     import crowdsource.psf as psfmod
@@ -116,6 +116,10 @@ function read_crowdsource(base,date,filt,vers,ccd)
     flux_stars = FITSIO.read(f[ccd*"_CAT"],"flux")
     decapsid = FITSIO.read(f[ccd*"_CAT"],"decapsid")
     gain = FITSIO.read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
+    w = []
+    for col in FITSIO.colnames(f[ccd*"_CAT"])
+        push!(w,(col,FITSIO.read(f[ccd*"_CAT"],col)))
+    end
     FITSIO.close(f)
 
     f = FITSIO.FITS(base*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
@@ -123,7 +127,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     sky_im = FITSIO.read(f[ccd*"_SKY"])
     FITSIO.close(f)
     #switch x, y order and compensate for 0 v 1 indexing between Julia and python
-    return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im
+    return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im, w
 end
 
 """
@@ -391,6 +395,6 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
     @views resid_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*uncond_input[kpsf1d])./var_wdb
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
 
-    return [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
+    return [std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20]
 end
 end
