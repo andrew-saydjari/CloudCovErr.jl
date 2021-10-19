@@ -35,12 +35,11 @@ Builds the required python crowdsource dependency and exports the required load
 function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
-    Conda.pip_interop(true)
-    Conda.pip("install","crowdsourcephoto")
-    Pkg.build("PyCall")
-    println(Conda.PYTHONDIR)
-    println(Conda.ROOTENV)
-    println(joinpath(dirname(pathof(PyCall))))
+    if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        Conda.pip_interop(true)
+        Conda.pip("install","crowdsourcephoto")
+        Pkg.build("PyCall")
+    end
     py"""
     import crowdsource.psf as psfmod
     from astropy.io import fits
