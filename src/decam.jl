@@ -19,7 +19,7 @@ export condCovEst_wdiag
 export save_fxn
 export proc_ccd
 
-import disCovErr
+using disCovErr
 using FITSIO
 import ImageFiltering
 import Distributions
