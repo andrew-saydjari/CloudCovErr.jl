@@ -25,25 +25,33 @@ function parse_commandline()
             required=true
             arg_type=String
             help="base directory containing crowdsource cat files"
+        "--thr", "-t"
+            help = "threshold for psf-based masking of the residuals (int for ease)"
+            arg_type = Int
+            default = 20
+        "--Np", "-p"
+            help = "sidelength size of spatial covariance matrix (must be int, odd)"
+            arg_type = Int
+            default = 33
     end
 end
 
-function main()
+function run_wrapper()
     parg = parse_commandline()
     proc_ccd(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],"N14",thr=parg["thr"],Np=parg["Np"])
 end
 
-main()
-
 # should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
+    # loads from disk
     ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
     (sx, sy) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
+
     # mask bad camera pixels/cosmic rays, then mask out star centers
     bmaskd = (d_im .!= 0)
     gen_mask_staticPSF!(bmaskd, psfstatic, x_stars, y_stars, flux_stars; thr=thr)
@@ -88,5 +96,5 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
 end
 
 # need to write the wrapper function that loops over ccds (unfinished)
-# need to think more about the memory preallocation (probably not limiting factor)
-# commandline function access
+## need to think more about the memory preallocation (probably not limiting factor)
+## improve commandline function access
