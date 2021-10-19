@@ -36,7 +36,9 @@ function for obtaining the position dependent psf to the python namespace.
 function __init__()
     Conda.pip_interop(true)
     Conda.pip("install","crowdsourcephoto")
-
+    println(Conda.PYTHONDIR)
+    println(Conda.ROOTENV)
+    println(joinpath(dirname(pathof(PyCall))))
     py"""
     import crowdsource.psf as psfmod
     from astropy.io import fits
