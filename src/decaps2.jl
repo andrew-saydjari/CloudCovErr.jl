@@ -42,6 +42,8 @@ function run_wrapper()
         parg["basecat"],"N14",thr=parg["thr"],Np=parg["Np"])
 end
 
+run_wrapper()
+
 # should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     # loads from disk
