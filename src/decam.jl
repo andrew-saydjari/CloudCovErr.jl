@@ -16,6 +16,7 @@ export load_psfmodel_cs
 export stamp_cutter
 export gen_pix_mask
 export condCovEst_wdiag
+export save_fxn
 
 import disCovErr
 import FITSIO
@@ -338,6 +339,12 @@ function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=thr)
         kstar = (kmasked2d .| kpsf2d)[:]
     end
     return psft, kstar, kpsf2d, cntks, dnt
+end
+
+function save_fxn(w,base,date,filt,vers,ccd)
+    f = FITSIO.FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
+    write(f,w)
+    close(f)
 end
 
 """
