@@ -90,7 +90,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
         push!(w,(col,star_stats[:,ind]))
     end
 
-    save_fxn(w,basecat,date,filt,vers,ccd)
+    save_fxn(Dict(w),basecat,date,filt,vers,ccd)
 
     return w
 end
