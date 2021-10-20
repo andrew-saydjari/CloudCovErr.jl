@@ -119,9 +119,11 @@ function read_crowdsource(base,date,filt,vers,ccd)
     flux_stars = read(f[ccd*"_CAT"],"flux")
     decapsid = read(f[ccd*"_CAT"],"decapsid")
     gain = read_key(f[ccd*"_HDR"],"GAINCRWD")[1]
+    wcol = String[]
     w = []
     for col in FITSIO.colnames(f[ccd*"_CAT"])
-        push!(w,(col,read(f[ccd*"_CAT"],col)))
+        push!(wcol,col)
+        push!(w,read(f[ccd*"_CAT"],col))
     end
     close(f)
 
@@ -130,7 +132,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     sky_im = read(f[ccd*"_SKY"])
     close(f)
     #switch x, y order and compensate for 0 v 1 indexing between Julia and python
-    return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im, w
+    return y_stars.+1, x_stars.+1, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w
 end
 
 """
@@ -342,9 +344,9 @@ function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=thr)
     return psft, kstar, kpsf2d, cntks, dnt
 end
 
-function save_fxn(w,base,date,filt,vers,ccd)
+function save_fxn(wcol,w,base,date,filt,vers,ccd)
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,w,name=ccd*"_CAT")
+    write(f,wcol,w,name=ccd*"_CAT")
     close(f)
 end
 
@@ -412,7 +414,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     # loads from disk
     ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
     (sx, sy) = size(ref_im)
-    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, w = read_crowdsource(basecat,date,filt,vers,ccd)
+    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
@@ -452,10 +454,11 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     end
     # prepare for export by appending to cat dictionary
     for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])
-        push!(w,(col,star_stats[:,ind]))
+        push!(wcol,col)
+        push!(w,star_stats[:,ind])
     end
     #OrderedDict probably needs me to modify FITSIO.jl
-    save_fxn(Dict(w),basecat,date,filt,vers,ccd)
+    save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd")
     return
 end
