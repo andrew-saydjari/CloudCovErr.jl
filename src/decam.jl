@@ -344,7 +344,7 @@ end
 
 function save_fxn(w,base,date,filt,vers,ccd)
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,w,name=ccd)
+    write(f,w,name=ccd*"_CAT")
     close(f)
 end
 
@@ -470,7 +470,7 @@ function get_catnames(f)
         else
             extname = read_key(h,"EXTNAME")[1]
             if last(extname,3) == "CAT"
-                push!(extnames,extname)
+                push!(extnames,chop(extname,tail=4))
             end
         end
         i+=1
