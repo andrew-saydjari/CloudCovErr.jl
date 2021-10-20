@@ -18,6 +18,7 @@ export gen_pix_mask
 export condCovEst_wdiag
 export save_fxn
 export proc_ccd
+export proc_all
 
 using disCovErr
 using FITSIO
