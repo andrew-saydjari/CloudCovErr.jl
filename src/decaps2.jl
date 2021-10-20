@@ -1,3 +1,4 @@
+push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/disCovErr.jl/src/")
 using disCovErr
 using ArgParse
 
