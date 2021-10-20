@@ -43,7 +43,7 @@ end
 
 function run_wrapper()
     parg = parse_commandline()
-    proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
+    disCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],thr=parg["thr"],Np=parg["Np"])
 end
 
