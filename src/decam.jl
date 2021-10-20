@@ -26,6 +26,7 @@ import ImageFiltering
 import Distributions
 import StatsBase
 using Random
+using OrderedCollections
 using LinearAlgebra
 using PyCall
 import Conda
@@ -157,13 +158,12 @@ function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr
     Δy = (psy-1)÷2
     Nstar = size(x_stars)[1]
     # assumes x/y_star is one indexed
-    for i=1:Nstar
+    @inbounds for i=1:Nstar
         fluxt=flux_stars[i]
         x_star = round(Int64, x_stars[i])
         y_star = round(Int64, y_stars[i])
-        mskt = (psfstamp .> thr/abs(fluxt))[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
-        bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= mskt
-        # FIX ME: worth triple checking these relative indexings
+        @inbounds bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= (psfstamp .> thr/abs(fluxt))[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
+        # FIX ME: worth triple checking these relative indexings (remove inbounds for testing when you do that!!)
     end
 end
 
@@ -223,7 +223,7 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
         wid = round(Int,wid)
         Δ = (wid-1)÷2
     end
-    println((cnt,wid))
+    println("Infilling completed after $cnt rounds with final width $wid")
 
     #catastrophic failure fallback
     if cnt == 10
@@ -455,7 +455,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
         push!(w,(col,star_stats[:,ind]))
     end
 
-    save_fxn(Dict(w),basecat,date,filt,vers,ccd)
+    save_fxn(OrderedDict(w),basecat,date,filt,vers,ccd)
     println("Saved $ccd")
     return
 end
