@@ -35,7 +35,7 @@ function parse_commandline()
         "--ccdlist", "-c"
             help = "list of ccd_CAT names to be run"
             nargs = '+'
-            default = []
+            default = String[]
     end
 end
 
