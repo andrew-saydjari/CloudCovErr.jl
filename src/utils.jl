@@ -41,12 +41,13 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     (Nstar,) = size(cxx)
     (sx, sy) = size(img)
 
-    cx = round.(Int64,cxx)
-    cy = round.(Int64,cyy)
+    cx = round.(Int32,cxx)
+    cy = round.(Int32,cyy)
 
     # preallocate output covariance array
-    Δr = zeros(Nstar)
-    Δc = zeros(Nstar)
+    Δr = zeros(Int32,Nstar)
+    Δc = zeros(Int32,Nstar)
+    # FIX ME: do we really benefit from this being full Float64
     cov = zeros(Nstar,Np*Np,Np*Np)
     μ = zeros(Nstar,Np*Np)
 
@@ -58,14 +59,13 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
 
     boxsmoothMod!(bimage,in_image,widx,widy,sx,sy)
     # loop over shifts
-    for dc=0:Np-1       # column shift loop
-        for dr=1-Np:Np-1   # row loop, incl negatives
+    @inbounds for dc=0:Np-1       # column shift loop
+            @inbounds for dr=1-Np:Np-1   # row loop, incl negatives
             # ism = image, shifted and multipled
             ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
 
-            # bism = boxcar(ism)
-            boxsmoothMod!(bism,ism,widx,widy,sx,sy)
             if dr >= 0
+                boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
                 for pc=1:Np-dc, pr=1:Np-dr
                     i = ((pc   -1)*Np)+pr
                     j = ((pc+dc-1)*Np)+pr+dr
@@ -81,11 +81,11 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
                 end
             end
             if (dr < 0) & (dc > 0)
-                ## FIX ME: We can probably remove the boxsmooth compute for dr<0, dc=0 with more care
-                for pc=1:Np-dc, pr=1-dr:Np
+                boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
+                @inbounds for pc=1:Np-dc, pr=1-dr:Np
                     i = ((pc   -1)*Np)+pr
                     j = ((pc+dc-1)*Np)+pr+dr
-                    for st=1:Nstar
+                    @inbounds for st=1:Nstar
                         drr = Δr[st]
                         dcc = Δc[st]
                         μ1μ2 = bimage[pr+drr,pc+dcc]*bimage[pr+dr+drr,pc+dc+dcc]
@@ -121,14 +121,14 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
 
     tot = zeros(sy)
 
-    for j=1-Δy:sy-Δy
+    @inbounds for j=1-Δy:sy-Δy
         if (j==1-Δy)
             @views tot = (sum(arr[:,1-Δy:1+Δy], dims=2))[:,1]
         else
             @views tot .+= (arr[:,j+widy-1]-arr[:,j-1])
         end
         tt=0
-        for i=1-Δx:sx-Δx
+        @inbounds for i=1-Δx:sx-Δx
             if (i==1-Δx)
                 @views tt = sum(tot[1-Δx:1+Δx])
             else

@@ -422,9 +422,9 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     gen_mask_staticPSF!(bmaskd, psfstatic, x_stars, y_stars, flux_stars; thr=thr)
 
     testim = copy(mod_im .- ref_im)
-    bimage = zeros(sx,sy)
+    bimage = zeros(Float32,sx,sy)
     bimageI = zeros(Int64,sx,sy)
-    testim2 = zeros(sx,sy)
+    testim2 = zeros(Float32,sx,sy)
     bmaskim2 = zeros(Bool,sx,sy)
     goodpix = zeros(Bool,sx,sy)
 
@@ -454,8 +454,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])
         push!(w,(col,star_stats[:,ind]))
     end
-
-    save_fxn(OrderedDict(w),basecat,date,filt,vers,ccd)
+    #OrderedDict probably needs me to modify FITSIO.jl
+    save_fxn(Dict(w),basecat,date,filt,vers,ccd)
     println("Saved $ccd")
     return
 end
