@@ -68,8 +68,6 @@ function inject_rename(fname)
     return chop(join(splitname,"/"),tail=7)*"I.fits.fz"
 end
 
-# FIX ME: Is there a world where we should be using the S7 corrected
-# crowdsource imports... careful on the wt sqrt in that case though
 """
     read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
 
@@ -101,6 +99,9 @@ function read_decam(base,date,filt,vers,ccd)
         dfn = inject_rename(dfn)
     end
     if corrects7 & ((ccd == "S7") | (ccd = "S7I"))
+        # a little wasteful to throw away load times in python for w_im and d_im
+        # but we need the crowdsource formatting for s7 correction and it is easiest
+        # to keep the disCovErr formatting consistent
         py_ref_im, py_w_im, py_d_im, nebprob = py"decam_proc.read_data(ifn,wfn,dfn,ccd,maskdiffuse=False)"
         py_w_im = nothing
         py_d_im = nothing
@@ -525,7 +526,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,thr=
         close(f)
         extnamesdone = String[]
     else
-        f = FITS(outfn,"r")
+        f = FITS(outfn,"r+")
         extnamesdone=get_catnames(f)
         close(f)
     end
