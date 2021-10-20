@@ -28,7 +28,6 @@ using Random
 using LinearAlgebra
 using PyCall
 import Conda
-import Pkg
 
 """
     __int__()
@@ -509,11 +508,13 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=[]thr=20,Np=33)
         extnames = setdiff(extnames,extnamesdone)
         println("Skipping ccds already completed: ", alreadydone)
     end
+    # limit to the ccds in the list not yet run
     if length(ccdlist) != 0
         extnames = intersect(extnames,ccdlist)
         println("Only running unfinished ccds in ccdlist: ", extnames)
     end
 
+    # main loop over ccds
     for ccd in extnames
         proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np)
     end
