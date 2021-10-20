@@ -461,8 +461,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     return
 end
 
-# need to think more about the memory preallocation (probably not limiting factor)
-
 function get_catnames(f)
     extnames = String[]
     i=1

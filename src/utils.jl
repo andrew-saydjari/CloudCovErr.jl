@@ -59,8 +59,8 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
 
     boxsmoothMod!(bimage,in_image,widx,widy,sx,sy)
     # loop over shifts
-    @inbounds for dc=0:Np-1       # column shift loop
-            @inbounds for dr=1-Np:Np-1   # row loop, incl negatives
+    for dc=0:Np-1       # column shift loop
+        for dr=1-Np:Np-1   # row loop, incl negatives
             # ism = image, shifted and multipled
             ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
 
@@ -82,10 +82,10 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
             end
             if (dr < 0) & (dc > 0)
                 boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
-                @inbounds for pc=1:Np-dc, pr=1-dr:Np
+                for pc=1:Np-dc, pr=1-dr:Np
                     i = ((pc   -1)*Np)+pr
                     j = ((pc+dc-1)*Np)+pr+dr
-                    @inbounds for st=1:Nstar
+                    for st=1:Nstar
                         drr = Δr[st]
                         dcc = Δc[st]
                         μ1μ2 = bimage[pr+drr,pc+dcc]*bimage[pr+dr+drr,pc+dc+dcc]
@@ -121,18 +121,18 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
 
     tot = zeros(sy)
 
-    @inbounds for j=1-Δy:sy-Δy
+    for j=1-Δy:sy-Δy
         if (j==1-Δy)
-            @views tot = (sum(arr[:,1-Δy:1+Δy], dims=2))[:,1]
+            tot = (sum(arr[:,1-Δy:1+Δy], dims=2))[:,1]
         else
-            @views tot .+= (arr[:,j+widy-1]-arr[:,j-1])
+            tot .+= (arr[:,j+widy-1]-arr[:,j-1])
         end
         tt=0
-        @inbounds for i=1-Δx:sx-Δx
+        for i=1-Δx:sx-Δx
             if (i==1-Δx)
-                @views tt = sum(tot[1-Δx:1+Δx])
+                tt = sum(tot[1-Δx:1+Δx])
             else
-                @views tt -= (tot[i-1]-tot[i+widx-1])
+                tt -= (tot[i-1]-tot[i+widx-1])
             end
             out[i+Δx,j+Δy] = tt
         end
