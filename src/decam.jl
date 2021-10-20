@@ -81,15 +81,17 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 """
 function read_decam(base,date,filt,vers,ccd)
     if last(ccd,1) == "I"
-        ccd = String(chop(ccd,tail=1))
+        term = ".I.fits.fz"
+    else
+        term = ".fits.fz"
     end
-    f = FITS(base*date*"_ooi_"*filt*"_"*vers*".fits.fz")
+    f = FITS(base*date*"_ooi_"*filt*"_"*vers*term)
     ref_im = read(f[ccd])
     close(f)
-    f = FITS(base*date*"_oow_"*filt*"_"*vers*".fits.fz")
+    f = FITS(base*date*"_oow_"*filt*"_"*vers*term)
     w_im = read(f[ccd])
     close(f)
-    f = FITS(base*date*"_ood_"*filt*"_"*vers*".fits.fz")
+    f = FITS(base*date*"_ood_"*filt*"_"*vers*term)
     d_im = read(f[ccd])
     close(f)
     return ref_im, w_im, d_im
