@@ -44,8 +44,14 @@ function __init__()
     end
     py"""
     import crowdsource.psf as psfmod
+    import crowdsource.decam_proc as decam_proc
     from astropy.io import fits
     from functools import partial
+    import os
+
+    # default decam_dir at Harvard
+    if 'DECAM_DIR' not in os.environ:
+        os.environ['DECAM_DIR'] = '/n/home13/schlafly/decam'
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
         f = fits.open(outfn)
@@ -94,16 +100,25 @@ function read_decam(base,date,filt,vers,ccd)
         wfn = inject_rename(wfn)
         dfn = inject_rename(dfn)
     end
-    f = FITS(ifn)
-    ref_im = read(f[ccd])
-    close(f)
-    f = FITS(wfn)
-    w_im = read(f[ccd])
-    close(f)
-    f = FITS(dfn)
-    d_im = read(f[ccd])
-    close(f)
-    return ref_im, w_im, d_im
+    if corrects7 & ((ccd == "S7") | (ccd = "S7I"))
+        py_ref_im, py_w_im, py_d_im, nebprob = py"decam_proc.read_data(ifn,wfn,dfn,ccd,maskdiffuse=False)"
+        py_w_im = nothing
+        py_d_im = nothing
+        nebprob = nothing
+        ref_im = py_ref_im'
+    else
+        f = FITS(ifn)
+        ref_im = read(f[ccd])
+        close(f)
+    end
+        f = FITS(wfn)
+        w_im = read(f[ccd])
+        close(f)
+        f = FITS(dfn)
+        d_im = read(f[ccd])
+        close(f)
+        return ref_im, w_im, d_im
+    end
 end
 
 """
