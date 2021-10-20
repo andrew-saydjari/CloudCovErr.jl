@@ -56,6 +56,12 @@ function __init__()
     """
 end
 
+function inject_rename(fname)
+    splitname = split(test1,"/")
+    splitname[4] = "decapsi"
+    return chop(join(splitname,"/"),tail=7)*"I.fits.fz"
+end
+
 # FIX ME: Is there a world where we should be using the S7 corrected
 # crowdsource imports... careful on the wt sqrt in that case though
 """
@@ -80,18 +86,21 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 
 """
 function read_decam(base,date,filt,vers,ccd)
+    ifn = base*date*"_ooi_"*filt*"_"*vers*".fits.fz"
+    wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
+    dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"
     if last(ccd,1) == "I"
-        term = ".I.fits.fz"
-    else
-        term = ".fits.fz"
+        ifn = inject_rename(ifn)
+        wfn = inject_rename(wfn)
+        dfn = inject_rename(dfn)
     end
-    f = FITS(base*date*"_ooi_"*filt*"_"*vers*term)
+    f = FITS(ifn)
     ref_im = read(f[ccd])
     close(f)
-    f = FITS(base*date*"_oow_"*filt*"_"*vers*term)
+    f = FITS(wfn)
     w_im = read(f[ccd])
     close(f)
-    f = FITS(base*date*"_ood_"*filt*"_"*vers*term)
+    f = FITS(dfn)
     d_im = read(f[ccd])
     close(f)
     return ref_im, w_im, d_im
