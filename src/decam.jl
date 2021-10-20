@@ -460,11 +460,10 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     return
 end
 
-## need to think more about the memory preallocation (probably not limiting factor)
-## improve commandline function access
+# need to think more about the memory preallocation (probably not limiting factor)
 
 function get_catnames(f)
-    extnames = []
+    extnames = String[]
     i=1
     for h in f
         if i==1
@@ -495,7 +494,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,thr=
         f = FITS(outfn,"w")
         write(f,[0], header=prihdr)
         close(f)
-        extnamesdone =[]
+        extnamesdone = String[]
     else
         f = FITS(outfn,"r")
         extnamesdone=get_catnames(f)
