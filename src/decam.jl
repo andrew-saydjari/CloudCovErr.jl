@@ -159,11 +159,12 @@ function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr
     Δy = (psy-1)÷2
     Nstar = size(x_stars)[1]
     # assumes x/y_star is one indexed
-    @inbounds for i=1:Nstar
+    for i=1:Nstar
         fluxt=flux_stars[i]
         x_star = round(Int64, x_stars[i])
         y_star = round(Int64, y_stars[i])
-        @inbounds bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= (psfstamp .> thr/abs(fluxt))[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
+        mskt = (psfstamp .> thr/abs(fluxt))[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
+        bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= mskt
         # FIX ME: worth triple checking these relative indexings (remove inbounds for testing when you do that!!)
     end
 end
@@ -423,9 +424,9 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     gen_mask_staticPSF!(bmaskd, psfstatic, x_stars, y_stars, flux_stars; thr=thr)
 
     testim = copy(mod_im .- ref_im)
-    bimage = zeros(Float32,sx,sy)
+    bimage = zeros(Float64,sx,sy)
     bimageI = zeros(Int64,sx,sy)
-    testim2 = zeros(Float32,sx,sy)
+    testim2 = zeros(Float64,sx,sy)
     bmaskim2 = zeros(Bool,sx,sy)
     goodpix = zeros(Bool,sx,sy)
 

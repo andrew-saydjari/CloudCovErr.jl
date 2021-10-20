@@ -41,12 +41,12 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     (Nstar,) = size(cxx)
     (sx, sy) = size(img)
 
-    cx = round.(Int32,cxx)
-    cy = round.(Int32,cyy)
+    cx = round.(Int,cxx)
+    cy = round.(Int,cyy)
 
     # preallocate output covariance array
-    Δr = zeros(Int32,Nstar)
-    Δc = zeros(Int32,Nstar)
+    Δr = zeros(Int,Nstar)
+    Δc = zeros(Int,Nstar)
     # FIX ME: do we really benefit from this being full Float64
     cov = zeros(Nstar,Np*Np,Np*Np)
     μ = zeros(Nstar,Np*Np)
@@ -63,9 +63,9 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
         for dr=1-Np:Np-1   # row loop, incl negatives
             # ism = image, shifted and multipled
             ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
+            boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
 
             if dr >= 0
-                boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
                 for pc=1:Np-dc, pr=1:Np-dr
                     i = ((pc   -1)*Np)+pr
                     j = ((pc+dc-1)*Np)+pr+dr
@@ -81,7 +81,6 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
                 end
             end
             if (dr < 0) & (dc > 0)
-                boxsmoothMod!(bism,ism,widx,widy,sx,sy) # bism = boxcar(ism)
                 for pc=1:Np-dc, pr=1-dr:Np
                     i = ((pc   -1)*Np)+pr
                     j = ((pc+dc-1)*Np)+pr+dr
