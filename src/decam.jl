@@ -26,7 +26,6 @@ import ImageFiltering
 import Distributions
 import StatsBase
 using Random
-using OrderedCollections
 using LinearAlgebra
 using PyCall
 import Conda
@@ -457,7 +456,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
         push!(wcol,col)
         push!(w,star_stats[:,ind])
     end
-    #OrderedDict probably needs me to modify FITSIO.jl
     save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd")
     return
