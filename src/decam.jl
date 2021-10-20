@@ -344,7 +344,7 @@ end
 
 function save_fxn(w,base,date,filt,vers,ccd)
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,w)
+    write(f,w,name=ccd)
     close(f)
 end
 
@@ -408,6 +408,7 @@ end
 
 # should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
+    println("Started $ccd")
     # loads from disk
     ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
     (sx, sy) = size(ref_im)
@@ -415,12 +416,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic = psfmodel(sx÷2,sy÷2,511)
-
-    # set up file
-    f1 = FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
-    f = FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","w")
-    write(f,[0], header=read_header(f1[1]))
-    close(f)
 
     # mask bad camera pixels/cosmic rays, then mask out star centers
     bmaskd = (d_im .!= 0)
@@ -461,12 +456,67 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
     end
 
     save_fxn(Dict(w),basecat,date,filt,vers,ccd)
-
-    return w
+    println("Saved $ccd")
+    return
 end
 
-# need to write the wrapper function that loops over ccds (unfinished)
 ## need to think more about the memory preallocation (probably not limiting factor)
 ## improve commandline function access
+
+function get_catnames(f)
+    extnames = []
+    i=1
+    for h in f
+        if i==1
+        else
+            extname = read_key(h,"EXTNAME")[1]
+            if last(extname,3) == "CAT"
+                push!(extnames,extname)
+            end
+        end
+        i+=1
+    end
+    return extnames
+end
+
+function proc_all(base,date,filt,vers,basecat;ccdlist=[]thr=20,Np=33)
+    infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
+    println("Starting to process "*infn)
+
+    f = FITS(infn)
+    prihdr = read_header(f[1])
+    extnames=get_catnames(f)
+    close(f)
+
+    outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
+
+    # write output file or read it in and check which ccds are completed
+    if ((!resume) | (!isfile(outfn)))
+        f = FITS(outfn,"w")
+        write(f,[0], header=prihdr)
+        close(f)
+        extnamesdone =[]
+    else
+        f = FITS(outfn,"r")
+        extnamesdone=get_catnames(f)
+        close(f)
+    end
+
+    ## prepare list of ccds to run
+    # remove the ones already done
+    if length(extnamesdone) !=0
+        alreadydone = intersect(extnames,extnamesdone)
+        extnames = setdiff(extnames,extnamesdone)
+        println("Skipping ccds already completed: ", alreadydone)
+    end
+    if length(ccdlist) != 0
+        extnames = intersect(extnames,ccdlist)
+        println("Only running unfinished ccds in ccdlist: ", extnames)
+    end
+
+    for ccd in extnames
+        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np)
+    end
+end
 
 end

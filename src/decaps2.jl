@@ -32,13 +32,17 @@ function parse_commandline()
             help = "sidelength size of spatial covariance matrix (must be int, odd)"
             arg_type = Int
             default = 33
+        "--ccdlist", "-c"
+            help = "list of ccd_CAT names to be run"
+            nargs = '+'
+            default = []
     end
 end
 
 function run_wrapper()
     parg = parse_commandline()
-    proc_ccd(parg["base"],parg["date"],parg["filt"],parg["vers"],
-        parg["basecat"],"N14",thr=parg["thr"],Np=parg["Np"])
+    proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
+        parg["basecat"],ccdlist=parg["ccdlist"],thr=parg["thr"],Np=parg["Np"])
 end
 
 run_wrapper()
