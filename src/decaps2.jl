@@ -5,6 +5,7 @@ using ArgParse
 function parse_commandline()
     s=ArgParseSettings()
     @add_arg_table s begin
+        # required file/dir name parameters
         "base"
             required=true
             arg_type=String
@@ -25,6 +26,7 @@ function parse_commandline()
             required=true
             arg_type=String
             help="base directory containing crowdsource cat files"
+        # method parameter values
         "--thr", "-t"
             help = "threshold for psf-based masking of the residuals (int for ease)"
             arg_type = Int
@@ -33,6 +35,11 @@ function parse_commandline()
             help = "sidelength size of spatial covariance matrix (must be int, odd)"
             arg_type = Int
             default = 33
+        # run settings
+        "--resume", "-r"
+            help = "resume partially completed file where leftoff"
+            action = :store_true
+        # limit run scope/specific subsets for testing
         "--ccdlist", "-c"
             help = "list of ccd_CAT names to be run"
             nargs = '+'
