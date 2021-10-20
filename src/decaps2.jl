@@ -37,6 +37,7 @@ function parse_commandline()
             nargs = '+'
             default = String[]
     end
+    return parse_args(s)
 end
 
 function run_wrapper()
