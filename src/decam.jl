@@ -479,7 +479,7 @@ function get_catnames(f)
     return extnames
 end
 
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],thr=20,Np=33)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,thr=20,Np=33)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     println("Starting to process "*infn)
 
