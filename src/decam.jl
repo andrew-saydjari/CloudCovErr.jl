@@ -437,10 +437,10 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
 end
 
 # should we be prellocating outside this subfunction?
-function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33)
+function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     println("Started $ccd")
     # loads from disk
-    ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd)
+    ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     (sx, sy) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
@@ -544,7 +544,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
 
     # main loop over ccds
     for ccd in extnames
-        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np)
+        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7)
     end
 end
 
