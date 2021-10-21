@@ -43,7 +43,7 @@ function __init__()
     end
     py"""
     import crowdsource.psf as psfmod
-    import crowdsource.decam_proc as decam_proc
+    from crowdsource.decam_proc import read_data
     from astropy.io import fits
     from functools import partial
     import os
@@ -101,7 +101,7 @@ function read_decam(base,date,filt,vers,ccd)
         # a little wasteful to throw away load times in python for w_im and d_im
         # but we need the crowdsource formatting for s7 correction and it is easiest
         # to keep the disCovErr formatting consistent
-        py_ref_im, py_w_im, py_d_im, nebprob = py"decam_proc.read_data"(ifn,wfn,dfn,ccd,maskdiffuse=false)
+        py_ref_im, py_w_im, py_d_im, nebprob = PyCall.py"read_data"(ifn,wfn,dfn,ccd,maskdiffuse=false)
         py_w_im = nothing
         py_d_im = nothing
         nebprob = nothing
@@ -304,7 +304,7 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `ccd`: which ccd we are pulling the image for
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
-    psfmodel_py = py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
+    psfmodel_py = PyCall.py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
     function psfmodel_jl(x,y,sz)
         # accounts for x, y ordering and 0 v 1 indexing between python and Julia
         return psfmodel_py(y.-1,x.-1,sz)'
