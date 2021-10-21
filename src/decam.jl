@@ -1,8 +1,6 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
 module decam
 
-using PyCall
-
 export prelim_infill!
 export add_sky_noise!
 export gen_mask_staticPSF!
@@ -23,6 +21,7 @@ export proc_ccd
 export proc_all
 
 using disCovErr
+using PyCall
 using FITSIO
 import ImageFiltering
 import Distributions
@@ -102,7 +101,7 @@ function read_decam(base,date,filt,vers,ccd)
         # a little wasteful to throw away load times in python for w_im and d_im
         # but we need the crowdsource formatting for s7 correction and it is easiest
         # to keep the disCovErr formatting consistent
-        py_ref_im, py_w_im, py_d_im, nebprob = py"decam_proc.read_data(ifn,wfn,dfn,ccd,maskdiffuse=False)"
+        py_ref_im, py_w_im, py_d_im, nebprob = py"decam_proc.read_data"(ifn,wfn,dfn,ccd,maskdiffuse=false)
         py_w_im = nothing
         py_d_im = nothing
         nebprob = nothing
