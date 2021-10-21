@@ -6,6 +6,15 @@
 
 Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background.
 
+## Installation
+
+Currently, installation is just from github
+
+```julia
+import Pkg
+Pkg.add("https://github.com/andrew-saydjari/disCovErr.jl.git")
+```
+
 ## Documentation
 
 Detailed documentation can be found [here][docs-dev-url].
