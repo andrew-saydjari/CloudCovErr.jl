@@ -35,6 +35,9 @@ function parse_commandline()
             help = "sidelength size of spatial covariance matrix (must be int, odd)"
             arg_type = Int
             default = 33
+        "--cS7",
+            help = "when set attempts to correct the amplifier offset in S7 fields"
+            action = :store_true
         # run settings
         "--resume", "-r"
             help = "resume partially completed file where leftoff"
@@ -51,7 +54,8 @@ end
 function run_wrapper()
     parg = parse_commandline()
     disCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
-        parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],thr=parg["thr"],Np=parg["Np"])
+        parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"]
+        thr=parg["thr"],Np=parg["Np"])
 end
 
 run_wrapper()

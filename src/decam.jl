@@ -88,7 +88,7 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 ```
 
 """
-function read_decam(base,date,filt,vers,ccd)
+function read_decam(base,date,filt,vers,ccd; corrects7=true)
     ifn = base*date*"_ooi_"*filt*"_"*vers*".fits.fz"
     wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
     dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"
@@ -97,7 +97,7 @@ function read_decam(base,date,filt,vers,ccd)
         wfn = inject_rename(wfn)
         dfn = inject_rename(dfn)
     end
-    if corrects7 & ((ccd == "S7") | (ccd = "S7I"))
+    if corrects7 .& ((ccd == "S7") .| (ccd = "S7I"))
         # a little wasteful to throw away load times in python for w_im and d_im
         # but we need the crowdsource formatting for s7 correction and it is easiest
         # to keep the disCovErr formatting consistent
@@ -506,7 +506,7 @@ function get_catnames(f)
     return extnames
 end
 
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,thr=20,Np=33)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     println("Starting to process "*infn)
 
