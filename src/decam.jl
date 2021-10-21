@@ -1,6 +1,8 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
 module decam
 
+using PyCall
+
 export prelim_infill!
 export add_sky_noise!
 export gen_mask_staticPSF!
@@ -27,7 +29,6 @@ import Distributions
 import StatsBase
 using Random
 using LinearAlgebra
-using PyCall
 import Conda
 
 """
@@ -38,8 +39,7 @@ function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
-        Conda.pip_interop(true)
-        Conda.pip("install","crowdsourcephoto")
+        Conda.add("crowdsourcephoto",channel="conda-forge")
         # is this a pip v condaforge problem? maybe because of tensorflow?
     end
     py"""
