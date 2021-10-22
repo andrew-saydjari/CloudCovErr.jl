@@ -1,5 +1,6 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 
 [extras]

@@ -12,6 +12,8 @@ jobs:
           version: '1.6'
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        env:
+          PYTHON: ""
       - name: Build and deploy
         env:
           PYTHON: ""
