@@ -1,6 +1,10 @@
 module disCovErr
 
-include("utils.jl")
+include("cov.jl")
+
+include("perstar.jl")
+
+include("preprocess.jl")
 
 include("decam.jl")
 using .decam

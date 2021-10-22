@@ -1,3 +1,7 @@
+# This is the run function used for commandline access
+# for the DECaPS2 survey error bar correction. It can be
+# used as a model for other survey specific run structures.
+
 push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/disCovErr.jl/src/")
 using disCovErr
 using ArgParse

@@ -5,6 +5,7 @@ import ShiftedArrays
 import OffsetArrays
 
 export cov_construct
+export boxsmoothMod!
 
 """
     cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129) -> cov, μ
