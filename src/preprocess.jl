@@ -1,5 +1,3 @@
-module preprocess
-
 using disCovErr
 import ImageFiltering
 import Distributions
@@ -134,6 +132,4 @@ function add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
             testim2[i,j] = intermed
         end
     end
-end
-
 end
