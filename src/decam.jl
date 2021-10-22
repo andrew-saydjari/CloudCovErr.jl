@@ -467,10 +467,10 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     # it would be nice if we handled bc well enough to not have to do the mask below
     # to do this would require cov_construct create images which are views and extend Nphalf beyond current boundaries
     # need to implement before run
-    stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
-    cxx = x_stars[stars_interior]
-    cyy = y_stars[stars_interior]
-    cflux = flux_stars[stars_interior]
+    #stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
+    cxx = x_stars #[stars_interior]
+    cyy = y_stars #[stars_interior]
+    cflux = flux_stars #[stars_interior]
     cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cxx)
@@ -480,7 +480,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,cxx[i],cyy[i],cflux[i];Np=33,thr=thr)
         star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end
-    # prepare for export by appending to cat dictionary
+    # prepare for export by appending to cat vectors
     for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])
         push!(wcol,col)
         push!(w,star_stats[:,ind])
