@@ -244,8 +244,15 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cxx)
     star_stats = zeros(Nstars,7)
+    
+    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+    in_w_im = ImageFiltering.padarray(w_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+    in_mod_im = ImageFiltering.padarray(mod_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+    in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+
     for i=1:Nstars
-        data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx[i],cyy[i],testim,w_im,mod_im,sky_im,bmaskd;Np=33)
+        data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx[i],cyy[i],in_image,in_w_im,in_mod_im,in_sky_im,in_bmaskd;Np=33)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,cxx[i],cyy[i],cflux[i];Np=33,thr=thr)
         star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end
