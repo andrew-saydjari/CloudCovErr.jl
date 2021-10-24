@@ -45,6 +45,9 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     cx = round.(Int,cxx)
     cy = round.(Int,cyy)
 
+    px0 = maximum(abs.(cx))
+    py0 = maximum(abs.(cy))
+
     # preallocate output covariance array
     Δr = zeros(Int,Nstar)
     Δc = zeros(Int,Nstar)
@@ -53,13 +56,13 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     μ = zeros(Nstar,Np*Np)
 
     in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+2,Np+Δy+2)));
-    bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(2*Np,2*Np)));
-    bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(2*Np,2*Np)));
+    bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
+    bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
     #this padding could be smaller I think for the b_ series
 
     Δr, Δc = cx.-(halfNp-1), cy.-(halfNp-1)
 
-    boxsmoothMod!(bimage,in_image,widx,widy,sx,sy,Np,Np)
+    boxsmoothMod!(bimage,in_image,widx,widy,sx,sy,halfNp+px0,halfNp+py0)
     # loop over shifts
     for dc=0:Np-1       # column shift loop
         pcr = 1:Np-dc
@@ -75,7 +78,7 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
             end
             # ism = image, shifted and multipled
             ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
-            boxsmoothMod!(bism,ism,widx,widy,sx,sy,Np,Np) # bism = boxcar(ism)
+            boxsmoothMod!(bism,ism,widx,widy,sx,sy,halfNp+px0,halfNp+py0) # bism = boxcar(ism)
 
             for pc=pcr, pr=prr
                 i = ((pc   -1)*Np)+pr
