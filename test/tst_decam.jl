@@ -1,7 +1,7 @@
 module decam_tests
     using Test
-    using disCovErr
-    using disCovErr.decam
+    using cloudCovErr
+    using cloudCovErr.decam
     using Random
 
     @testset "imagePrep" begin

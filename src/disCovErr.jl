@@ -1,4 +1,4 @@
-module disCovErr
+module cloudCovErr
 
 include("cov.jl")
 

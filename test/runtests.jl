@@ -1,5 +1,5 @@
 using Test
-using disCovErr
+using cloudCovErr
 
 tests = [
     "tst_utils.jl",

@@ -1,6 +1,6 @@
 module utils_tests
     using Test
-    using disCovErr
+    using cloudCovErr
 
     @testset "CovEst" begin
         X, Y = cov_construct(ones(256,256),[128],[128])

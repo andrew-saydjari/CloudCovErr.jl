@@ -1,4 +1,4 @@
-using disCovErr
+using cloudCovErr
 using Documenter
 
 makedocs(
@@ -8,7 +8,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/andrew-saydjari/disCovErr.jl.git",
+    repo = "github.com/andrew-saydjari/cloudCovErr.jl.git",
     branch = "gh-pages",
     devbranch = "main"
 )

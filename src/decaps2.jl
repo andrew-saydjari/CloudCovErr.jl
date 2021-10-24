@@ -2,8 +2,8 @@
 # for the DECaPS2 survey error bar correction. It can be
 # used as a model for other survey specific run structures.
 
-push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/disCovErr.jl/src/")
-using disCovErr
+push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/cloudCovErr.jl/src/")
+using cloudCovErr
 using ArgParse
 
 function parse_commandline()

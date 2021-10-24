@@ -29,6 +29,7 @@ function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        Conda.add("mkl",channel="conda-forge")
         Conda.add("crowdsourcephoto",channel="conda-forge")
         # is this a pip v condaforge problem? maybe because of tensorflow?
     end
@@ -244,7 +245,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(cxx)
     star_stats = zeros(Nstars,7)
-    
+
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_w_im = ImageFiltering.padarray(w_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_mod_im = ImageFiltering.padarray(mod_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
