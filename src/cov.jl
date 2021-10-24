@@ -6,6 +6,21 @@ import OffsetArrays
 
 export cov_construct
 export boxsmoothMod!
+export outest_bounds
+
+function outest_bounds(cx,sx)
+    px0 = 0
+    sortcx = sort(cx)
+    if sortcx[1] < 1
+        px0 = abs(sortcx[1])
+    end
+    if sortcx[1] > sx
+        if px0 < (sortcx[1]-sx)
+            px0 = (sortcx[1]-sx)
+        end
+    end
+    return px0
+end
 
 """
     cov_construct(img, cx, cy; Np::Int=33, widx::Int=129, widy::Int=129) -> cov, μ
@@ -45,8 +60,8 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     cx = round.(Int,cxx)
     cy = round.(Int,cyy)
 
-    px0 = maximum(abs.(cx))
-    py0 = maximum(abs.(cy))
+    px0 = outest_bounds(cx,sx)
+    py0 = outest_bounds(cy,sy)
 
     # preallocate output covariance array
     Δr = zeros(Int,Nstar)
@@ -58,7 +73,6 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+2,Np+Δy+2)));
     bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
     bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
-    #this padding could be smaller I think for the b_ series
 
     Δr, Δc = cx.-(halfNp-1), cy.-(halfNp-1)
 

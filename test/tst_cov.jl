@@ -1,4 +1,4 @@
-module utils_tests
+module tst_cov
     using Test
     using cloudCovErr
 
