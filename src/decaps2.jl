@@ -57,7 +57,7 @@ end
 
 function run_wrapper()
     parg = parse_commandline()
-    disCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
+    cloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"],
         thr=parg["thr"],Np=parg["Np"])
 end

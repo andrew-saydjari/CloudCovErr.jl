@@ -11,7 +11,7 @@ export get_catnames
 export proc_ccd
 export proc_all
 
-using disCovErr
+using cloudCovErr
 using PyCall
 using FITSIO
 import ImageFiltering
