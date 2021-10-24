@@ -30,7 +30,6 @@ function for obtaining the position dependent psf to the python namespace.
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
         Conda.add("nomkl",channel="conda-forge")
-        Conda.rm("mkl")
         Conda.add("crowdsourcephoto",channel="conda-forge")
         # is this a pip v condaforge problem? maybe because of tensorflow?
     end
