@@ -1,5 +1,5 @@
-name = "disCovErr"
-uuid = "27265a64-b7e3-4dc3-94fe-c3a18e23078a"
+name = "cloudCovErr"
+uuid = "06334dd7-98ce-4d72-a129-750f571d4b02"
 version = "0.1.1"
 
 [deps]

@@ -1,13 +1,13 @@
-# disCovErr.jl Documentation
+# cloudCovErr.jl Documentation
 
 ```@contents
 ```
 
 ```@meta
-CurrentModule = disCovErr
+CurrentModule = cloudCovErr
 ```
 
 ```@autodocs
-Modules = [disCovErr]
+Modules = [cloudCovErr]
 Order   = [:function, :type]
 ```
