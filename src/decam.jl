@@ -56,7 +56,7 @@ end
 ## File specific read/write functions
 
 function inject_rename(fname)
-    splitname = split(test1,"/")
+    splitname = split(fname,"/")
     splitname[4] = "decapsi"
     return chop(join(splitname,"/"),tail=7)*"I.fits.fz"
 end

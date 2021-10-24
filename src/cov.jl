@@ -73,7 +73,7 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
     bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
 
-    Δr, Δc = cx.-(halfNp-1), cy.-(halfNp-1)
+    Δr, Δc = cx.-halfNp, cy.-halfNp
 
     boxsmoothMod!(bimage,in_image,widx,widy,sx,sy,halfNp+px0,halfNp+py0)
     # loop over shifts
