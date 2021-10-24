@@ -2,7 +2,6 @@
 import OffsetArrays
 import ImageFiltering
 import ShiftedArrays
-import OffsetArrays
 
 export cov_construct
 export boxsmoothMod!
@@ -60,8 +59,8 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     cx = round.(Int,cxx)
     cy = round.(Int,cyy)
 
-    px0 = outest_bounds(cx,sx)
-    py0 = outest_bounds(cy,sy)
+    px0 = outest_bounds(cx,sx)+1
+    py0 = outest_bounds(cy,sy)+1
 
     # preallocate output covariance array
     Δr = zeros(Int,Nstar)
