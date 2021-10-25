@@ -1,6 +1,7 @@
 # plotting functions to accompany the repo
 module plotting
 
+using Conda
 using PyCall, LaTeXStrings, Formatting
 import PyPlot; const plt = PyPlot
 
