@@ -1,7 +1,7 @@
 module tst_plots
     using Test
     using cloudCovErr
-
+    using cloudCovErr.plotting
 
     @testset "Plots" begin
         cov_out = ones(2,2)
