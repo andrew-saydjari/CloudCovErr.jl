@@ -88,7 +88,7 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;export_mean=false)
+function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;export_mean=false,n_draw=0)
     k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
@@ -120,12 +120,24 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     @views resid_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*uncond_input[kpsf1d])./var_wdb
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
 
+    # Currently limited to the Np region. Often useful to have some context with a larger
+    # surrounding region... TO DO to implement
+    out = []
+    push!(out,[std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20])
     if export_mean
         mean_out = copy(data_in)
         mean_out[kstar] .= kstarpred
+        push!(out,mean_out)
+    end
+    if n_draw != 0
+        covsvd = svd(predcovar)
+        sqrt_cov = covsvd.V*diagm(sqrt.(covsvd.S))*covsvd.Vt;
+        noise = sqrt_cov*randn(size(sqrt_cov)[1],n_draw)
 
-        return [std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20], mean_out
+        draw_out = repeat(copy(data_in)[:],outer=[1 n_draw])
+        draw_out[kstar,:] .= repeat(kstarpred,outer=[1 n_draw]) .+ noise
+        push!(out,draw_out)
     end
 
-    return [std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20]
+    return out
 end
