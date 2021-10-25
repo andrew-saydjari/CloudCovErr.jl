@@ -1,4 +1,13 @@
 # plotting functions to accompany the repo
+module plotting
+
+using PyCall, LaTeXStrings, Formatting
+import PyPlot; const plt = PyPlot
+plt.matplotlib.style.use("dark_background")
+cc=pyimport("colorcet")
+
+export cov_as_img
+export plot_cov_compare
 
 function cov_as_img(cov_out)
     (sx, sy) = size(cov_out)
@@ -167,4 +176,5 @@ function plot_cov_compare(C, cov_out)
 
     cax = fig.add_axes([ax.get_position().x1,ax.get_position().y0,0.02,ax.get_position().height])
     plt.colorbar(sc, cax=cax)
+end
 end
