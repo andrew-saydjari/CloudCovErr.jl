@@ -11,7 +11,7 @@ function outest_bounds(cx,sx)
     px0 = 0
     sortcx = sort(cx)
     if sortcx[1] < 1
-        px0 = abs(sortcx[1])
+        px0 = abs(sortcx[1]-1)
     end
     if sortcx[1] > sx
         if px0 < (sortcx[1]-sx)
@@ -59,8 +59,8 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     cx = round.(Int,cxx)
     cy = round.(Int,cyy)
 
-    px0 = outest_bounds(cx,sx)+1
-    py0 = outest_bounds(cy,sy)+1
+    px0 = outest_bounds(cx,sx)
+    py0 = outest_bounds(cy,sy)
 
     # preallocate output covariance array
     Δr = zeros(Int,Nstar)
@@ -69,11 +69,11 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     cov = zeros(Nstar,Np*Np,Np*Np)
     μ = zeros(Nstar,Np*Np)
 
-    in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+2,Np+Δy+2)));
+    in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+px0,Np+Δy+py0)));
     bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
     bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
 
-    Δr, Δc = cx.-halfNp, cy.-halfNp
+    Δr, Δc = cx.-(halfNp.+1), cy.-(halfNp.+1)
 
     boxsmoothMod!(bimage,in_image,widx,widy,sx,sy,halfNp+px0,halfNp+py0)
     # loop over shifts
