@@ -88,7 +88,7 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
+function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;export_mean=false)
     k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
@@ -119,6 +119,13 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft)
 
     @views resid_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*uncond_input[kpsf1d])./var_wdb
     @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
+
+    if export_mean
+        mean_out = copy(data_in)
+        mean_out[kstar] .= kstarpred
+
+        return [std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20], mean_out
+    end
 
     return [std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20]
 end

@@ -3,11 +3,22 @@ module plotting
 
 using PyCall, LaTeXStrings, Formatting
 import PyPlot; const plt = PyPlot
-plt.matplotlib.style.use("dark_background")
-cc=pyimport("colorcet")
 
 export cov_as_img
 export plot_cov_compare
+
+"""
+    __int__()
+
+Builds the required python plotting dependency.
+"""
+function __init__()
+    if !haskey(Conda._installed_packages_dict(),"colorcet")
+        Conda.add("colorcet",channel="conda-forge")
+    end
+    plt.matplotlib.style.use("dark_background")
+    cc=pyimport("colorcet")
+end
 
 function cov_as_img(cov_out)
     (sx, sy) = size(cov_out)
