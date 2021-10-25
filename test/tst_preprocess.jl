@@ -16,7 +16,7 @@ module tst_preprocess
         prelim_infill!(ttt_testim,ttt_maskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_maskim2, ttt_goodpix, widx = 19, widy=19)
         @test ttt_testim2[16,16] == 1.0
         prelim_infill!(ttt_testim,ttt_maskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_maskim2, ttt_goodpix, widx = 1, widy=1)
-        @test ttt_testim2 == ttt_testim
+        @test ttt_testim2 == ones(33,33)
 
         ttt_testim2 = ones(2,2)
         ttt_maskim2 = ones(Bool,2,2)
