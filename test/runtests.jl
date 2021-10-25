@@ -3,7 +3,7 @@ using cloudCovErr
 
 tests = [
     "tst_cov.jl",
-    "tst_preprocess.jl"
+    "tst_preprocess.jl",
     "tst_plots.jl"
 ]
 
