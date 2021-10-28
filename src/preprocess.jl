@@ -9,6 +9,11 @@ export gen_mask_staticPSF!
 export gen_mask_staticPSF2!
 export prelim_infill!
 export add_sky_noise!
+export findmaxpsf
+
+function findmaxpsf(psfstamp1;thr=20)
+    thr/maximum([psfstamp1[:,1]...,psfstamp1[1,:]...,psfstamp1[:,end]...,psfstamp1[end,:]...])
+end
 
 """
     gen_mask_staticPSF!(maskd, psfstamp, x_stars, y_stars, flux_stars, thr=20)
@@ -53,7 +58,7 @@ function gen_mask_staticPSF2!(bmaskd, psfstamp, psfstamp1, x_stars, y_stars, flu
     Δx1 = (psx1-1)÷2
     Δy1 = (psy1-1)÷2
     Nstar = size(x_stars)[1]
-    flim = findmaxpsf(psfstamp1;thr=20)
+    flim = findmaxpsf(psfstamp1;thr=thr)
     # assumes x/y_star is one indexed
     for i=1:Nstar
         fluxt = abs(flux_stars[i])
