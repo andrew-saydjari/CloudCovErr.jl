@@ -93,7 +93,7 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
     #think about the gspice trick and invert cov_r, and then get cov_kk for free (condition on the kstar/k ratio)
-    cov_r = Symmetric(cov_loc) + diagm(0 => stars_in[:])
+    cov_r = Symmetric(cov_loc) .+ diagm(0 => stars_in[:])
     cov_kk = Symmetric(cov_r[k,k])
     cov_kstark = cov_r[kstar,k];
     cov_kstarkstar = Symmetric(cov_r[kstar,kstar]);
@@ -123,7 +123,7 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     # Currently limited to the Np region. Often useful to have some context with a larger
     # surrounding region... TO DO to implement
     out = []
-    push!(out,[std_w std_wdiag sqrt(var_wdb) resid_mean+pred_mean resid_mean pred_mean chi20])
+    push!(out,[std_w std_wdiag sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean chi20])
     if export_mean
         mean_out = copy(data_in)
         mean_out[kstar] .= kstarpred

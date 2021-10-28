@@ -205,7 +205,6 @@ end
 # combines all of the functions in the repo for
 # an acutal implementation
 
-# should we be prellocating outside this subfunction?
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     println("Started $ccd")
     # loads from disk
@@ -214,11 +213,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
-    psfstatic = psfmodel(sx÷2,sy÷2,511)
+    psfstatic511 = psfmodel(sx÷2,sy÷2,511)
+    psfstatic33 = psfmodel(sx÷2,sy÷2,33)
 
     # mask bad camera pixels/cosmic rays, then mask out star centers
     bmaskd = (d_im .!= 0)
-    gen_mask_staticPSF!(bmaskd, psfstatic, x_stars, y_stars, flux_stars; thr=thr)
+    gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
     testim = copy(mod_im .- ref_im)
     bimage = zeros(Float64,sx,sy)
@@ -233,16 +233,9 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
     add_sky_noise!(testim2,bmaskd,sky_im,gain;seed=rndseed)
     ## construct local covariance matrix
-    # it would be nice if we handled bc well enough to not have to do the mask below
-    # to do this would require cov_construct create images which are views and extend Nphalf beyond current boundaries
-    # need to implement before run
-    #stars_interior = ((x_stars) .> Np) .& ((x_stars) .< sx.-Np) .& ((y_stars) .> Np) .& ((y_stars) .< sy.-Np);
-    cxx = x_stars #[stars_interior]
-    cyy = y_stars #[stars_interior]
-    cflux = flux_stars #[stars_interior]
-    cov_loc, μ_loc = cov_construct(testim2, cxx, cyy; Np=Np, widx=129, widy=129)
+    cov_loc, μ_loc = cov_construct(testim2, x_stars, y_stars; Np=Np, widx=129, widy=129)
     ## iterate over all star positions and compute errorbars/debiasing corrections
-    (Nstars,) = size(cxx)
+    (Nstars,) = size(x_stars)
     star_stats = zeros(Nstars,7)
 
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
@@ -252,8 +245,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
 
     for i=1:Nstars
-        data_in, data_w, stars_in, kmasked2d = stamp_cutter(cxx[i],cyy[i],in_image,in_w_im,in_mod_im,in_sky_im,in_bmaskd;Np=33)
-        psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,cxx[i],cyy[i],cflux[i];Np=33,thr=thr)
+        data_in, data_w, stars_in, kmasked2d = stamp_cutter(x_stars[i],y_stars[i],in_image,in_w_im,in_mod_im,in_sky_im,in_bmaskd;Np=33)
+        psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,x_stars[i],y_stars[i],flux_stars[i];Np=33,thr=thr)
         star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end
     # prepare for export by appending to cat vectors

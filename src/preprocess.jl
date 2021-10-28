@@ -6,6 +6,7 @@ using Random
 using LinearAlgebra
 
 export gen_mask_staticPSF!
+export gen_mask_staticPSF2!
 export prelim_infill!
 export add_sky_noise!
 
@@ -38,8 +39,41 @@ function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr
         fluxt=abs(flux_stars[i])
         x_star = round(Int64, x_stars[i])
         y_star = round(Int64, y_stars[i])
-        mskt = (psfstamp .> thr/fluxt)[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
-        bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= mskt
+        @views mskt = (psfstamp .> thr/fluxt)[maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx]),maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])]
+        @views bmaskd[maximum([1,x_star-Δx]):minimum([x_star+Δx,sx]),maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])] .|= mskt
+    end
+end
+
+function gen_mask_staticPSF2!(bmaskd, psfstamp, psfstamp1, x_stars, y_stars, flux_stars; thr=20)
+    (sx, sy) = size(bmaskd)
+    (psx, psy) = size(psfstamp)
+    Δx = (psx-1)÷2
+    Δy = (psy-1)÷2
+    (psx1, psy1) = size(psfstamp1)
+    Δx1 = (psx1-1)÷2
+    Δy1 = (psy1-1)÷2
+    Nstar = size(x_stars)[1]
+    flim = findmaxpsf(psfstamp1;thr=20)
+    # assumes x/y_star is one indexed
+    for i=1:Nstar
+        fluxt = abs(flux_stars[i])
+        x_star = round(Int64, x_stars[i])
+        y_star = round(Int64, y_stars[i])
+        if fluxt > flim
+            pxrange = maximum([1,2+Δx-x_star]):minimum([1+sx-x_star+Δx,psx])
+            pyrange = maximum([1,2+Δy-y_star]):minimum([1+sy-y_star+Δy,psy])
+            bxrange = maximum([1,x_star-Δx]):minimum([x_star+Δx,sx])
+            byrange = maximum([1,y_star-Δy]):minimum([y_star+Δy,sy])
+            @views mskt = (psfstamp[pxrange,pyrange] .> thr/fluxt)
+        else
+            pxrange = maximum([1,2+Δx1-x_star]):minimum([1+sx-x_star+Δx1,psx1])
+            pyrange = maximum([1,2+Δy1-y_star]):minimum([1+sy-y_star+Δy1,psy1])
+            bxrange = maximum([1,x_star-Δx1]):minimum([x_star+Δx1,sx])
+            byrange = maximum([1,y_star-Δy1]):minimum([y_star+Δy1,sy])
+            @views mskt = (psfstamp1[pxrange,pyrange] .> thr/fluxt)
+        end
+        #println((size(mskt),size(bmaskd[bxrange,byrange])))
+        @views bmaskd[bxrange,byrange] .|= mskt
         # FIX ME: worth triple checking these relative indexings (remove inbounds for testing when you do that!!)
     end
 end
@@ -71,8 +105,8 @@ infill values.
 """
 function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;widx=19,widy=19)
 
-    wid = maximum([widx, widy])
-    Δ = (wid-1)÷2
+    Δx = (widx-1)÷2
+    Δy = (widy-1)÷2
     (sx, sy) = size(testim)
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
@@ -83,11 +117,11 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
     while any(bmaskim2) .& (cnt .< 10)
-        in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
-        in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δ+2,Δ+2)));
+        in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
+        in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
         # FIX ME: could do this better to use widx != widy
-        cloudCovErr.boxsmoothMod!(bimage, in_image, wid, wid, sx, sy, 0, 0)
-        cloudCovErr.boxsmoothMod!(bimageI, in_mask, wid, wid, sx, sy, 0, 0)
+        cloudCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy, 0, 0)
+        cloudCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy, 0, 0)
 
         goodpix .= (bimageI .> 10)
 
@@ -96,9 +130,12 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
 
         # update loop params
         cnt+=1
-        wid*=1.4
-        wid = round(Int,wid)
-        Δ = (wid-1)÷2
+        widx*=1.4
+        widy*=1.4
+        widx = round(Int,widx)
+        widy = round(Int,widy)
+        Δx = (widx-1)÷2
+        Δy = (widy-1)÷2
     end
     println("Infilling completed after $cnt rounds with final width $wid")
 

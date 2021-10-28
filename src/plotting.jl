@@ -23,7 +23,7 @@ end
 
 function cov_as_img(cov_out)
     (sx, sy) = size(cov_out)
-    Np = sqrt(sx)
+    Np = Int(sqrt(sx))
     Ns = (Np - 1) ÷ 2
 
     fig = plt.figure(figsize=(16,8), dpi=150)
