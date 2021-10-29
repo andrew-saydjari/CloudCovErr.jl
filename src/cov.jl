@@ -72,6 +72,7 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
     in_image = ImageFiltering.padarray(img,ImageFiltering.Pad(:reflect,(Np+Δx+px0,Np+Δy+py0)));
     bism = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
     bimage = ImageFiltering.padarray(copy(img),ImageFiltering.Pad(:reflect,(halfNp+px0,halfNp+py0)));
+    ism = copy(in_image)
 
     Δr, Δc = cx.-(halfNp.+1), cy.-(halfNp.+1)
 
@@ -90,7 +91,7 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
                 prr = 1-dr:Np
             end
             # ism = image, shifted and multipled
-            ism = in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
+            ism .= in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
             boxsmoothMod!(bism,ism,widx,widy,sx,sy,halfNp+px0,halfNp+py0) # bism = boxcar(ism)
 
             for pc=pcr, pr=prr
@@ -99,8 +100,8 @@ function cov_construct(img, cxx, cyy; Np::Int=33, widx::Int=129, widy::Int=129)
                 for st=1:Nstar
                     drr = Δr[st]
                     dcc = Δc[st]
-                    μ1μ2 = bimage[pr+drr,pc+dcc]*bimage[pr+dr+drr,pc+dc+dcc]
-                    cov[st,i,j] = bism[pr+drr,pc+dcc]/(widx*widy) - μ1μ2/((widx*widy)^2)
+                    @views μ1μ2 = bimage[pr+drr,pc+dcc]*bimage[pr+dr+drr,pc+dc+dcc]
+                    @views cov[st,i,j] = bism[pr+drr,pc+dcc]/(widx*widy) - μ1μ2/((widx*widy)^2)
                     if i == j
                         μ[st,i] = μ1μ2/((widx*widy)^2)
                     end
@@ -136,7 +137,7 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int, px::Int
         if (j==1-Δy-py)
             tot = (sum(arr[:,1-Δy-py:1+Δy-py], dims=2))[:,1]
         else
-            tot .+= (arr[:,j+widy-1]-arr[:,j-1])
+            @views tot .+= (arr[:,j+widy-1]-arr[:,j-1])
         end
         tt=0
         @inbounds for i=(1-Δx-px):(sx-Δx+px)

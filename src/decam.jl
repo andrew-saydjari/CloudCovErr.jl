@@ -214,7 +214,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
 
     psfmodel = load_psfmodel_cs(basecat,date,filt,vers,ccd)
     psfstatic511 = psfmodel(sx÷2,sy÷2,511)
-    psfstatic33 = psfmodel(sx÷2,sy÷2,33)
+    psfstatic33 = psfmodel(sx÷2,sy÷2,Np)
 
     # mask bad camera pixels/cosmic rays, then mask out star centers
     bmaskd = (d_im .!= 0)
@@ -240,12 +240,11 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
 
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_w_im = ImageFiltering.padarray(w_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
-    in_mod_im = ImageFiltering.padarray(mod_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
-    in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
+    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
 
     for i=1:Nstars
-        data_in, data_w, stars_in, kmasked2d = stamp_cutter(x_stars[i],y_stars[i],in_image,in_w_im,in_mod_im,in_sky_im,in_bmaskd;Np=33)
+        data_in, data_w, stars_in, kmasked2d = stamp_cutter(x_stars[i],y_stars[i],in_image,in_w_im,in_stars_im,in_bmaskd;Np=33)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,x_stars[i],y_stars[i],flux_stars[i];Np=33,thr=thr)
         star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
     end

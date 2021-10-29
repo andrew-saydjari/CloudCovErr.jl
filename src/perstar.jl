@@ -20,7 +20,7 @@ per star statistics calculations.
 - `maskim`: input image of masked pixels
 - `Np`: size of covariance matrix footprint around each star
 """
-function stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33)
+function stamp_cutter(cxx,cyy,residimIn,w_im,star_im,maskim;Np=33)
     cx = round(Int64,cxx)
     cy = round(Int64,cyy)
     radNp = (Np-1)÷2
@@ -28,13 +28,12 @@ function stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33)
     cov_stamp = cx-radNp:cx+radNp,cy-radNp:cy+radNp
     @views data_in = residimIn[cov_stamp[1],cov_stamp[2]]
     @views data_w = w_im[cov_stamp[1],cov_stamp[2]]
-    @views stars_in = (mod_im.-skyim)[cov_stamp[1],cov_stamp[2]]
+    @views stars_in = star_im[cov_stamp[1],cov_stamp[2]]
     @views kmasked2d = maskim[cov_stamp[1],cov_stamp[2]];
-
     return data_in, data_w, stars_in, kmasked2d
 end
 
-function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=thr)
+function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=20)
 
     psft = psfmodel(x_star,y_star,Np)
 
@@ -92,38 +91,41 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
-    #think about the gspice trick and invert cov_r, and then get cov_kk for free (condition on the kstar/k ratio)
     cov_r = Symmetric(cov_loc) .+ diagm(0 => stars_in[:])
     cov_kk = Symmetric(cov_r[k,k])
-    cov_kstark = cov_r[kstar,k];
+    cov_kkstar = cov_r[k,kstar];
     cov_kstarkstar = Symmetric(cov_r[kstar,kstar]);
-    icov_kk = inv(cholesky(cov_kk))
-    predcovar = Symmetric(cov_kstarkstar - (cov_kstark*icov_kk*cov_kstark'))
-    ipcov = inv(cholesky(predcovar))
+    icov_kkC = cholesky(cov_kk)
+    icovkkCcovkkstar = icov_kkC\cov_kkstar
+    predcovar = Symmetric(cov_kstarkstar - (cov_kkstar'*icovkkCcovkkstar))
+    ipcovC = cholesky(predcovar)
 
     @views uncond_input = data_in[:]
     @views cond_input = data_in[:].- μ
 
-    kstarpredn = cov_kstark*icov_kk*cond_input[k]
+    kstarpredn = (cond_input[k]'*icovkkCcovkkstar)'
     kstarpred = kstarpredn .+ μ[kstar]
     #This is not that impressive. chi2 of larger patch is more useful diagnostic
-    chi20 = (kstarpredn'*ipcov*kstarpredn)
+    #chi20 = (kstarpredn'*ipcov*kstarpredn)
 
     @views p = psft[kpsf2d][:]
-    @views pw = p.*data_w[kpsf2d][:]
-    @views p2w = p.*pw
+    #@views pw = p.*data_w[kpsf2d][:]
+    #@views p2w = p.*pw
 
-    @views std_w = sqrt(abs(pw'*predcovar[kpsf1d_kstar,kpsf1d_kstar]*pw))/sum(p2w)
-    @views std_wdiag = sqrt(abs(sum((pw.^(2)).*diag(predcovar[kpsf1d_kstar,kpsf1d_kstar]))))/sum(p2w)
-    @views var_wdb = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*p)
+    ipcovCp = ipcovC\p
 
-    @views resid_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*uncond_input[kpsf1d])./var_wdb
-    @views pred_mean = (p'*ipcov[kpsf1d_kstar,kpsf1d_kstar]*kstarpred[kpsf1d_kstar])./var_wdb
+    #@views std_w = sqrt(abs(pw'*predcovar[kpsf1d_kstar,kpsf1d_kstar]*pw))/sum(p2w)
+    #@views std_wdiag = sqrt(abs(sum((pw.^(2)).*diag(predcovar[kpsf1d_kstar,kpsf1d_kstar]))))/sum(p2w)
+    @views var_wdb = (p'*ipcovCp)
+
+    @views resid_mean = (uncond_input[kpsf1d]'*ipcovCp)./var_wdb
+    @views pred_mean = (kstarpred[kpsf1d_kstar]'*ipcovCp)./var_wdb
 
     # Currently limited to the Np region. Often useful to have some context with a larger
     # surrounding region... TO DO to implement
     out = []
-    push!(out,[std_w std_wdiag sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean chi20])
+    push!(out,[sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean])
+    #push!(out,[std_w std_wdiag sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean chi20])
     if export_mean
         mean_out = copy(data_in)
         mean_out[kstar] .= kstarpred

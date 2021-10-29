@@ -124,7 +124,6 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
     while any(bmaskim2) .& (cnt .< 10)
         in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
         in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
-        # FIX ME: could do this better to use widx != widy
         cloudCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy, 0, 0)
         cloudCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy, 0, 0)
 
