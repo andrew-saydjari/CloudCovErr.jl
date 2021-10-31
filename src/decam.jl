@@ -83,11 +83,9 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 """
 function read_decam(base,date,filt,vers,ccd; corrects7=true)
     ifn = base*date*"_ooi_"*filt*"_"*vers*".fits.fz"
-    wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
     dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"
     if last(ccd,1) == "I"
         ifn = inject_rename(ifn)
-        wfn = inject_rename(wfn)
         dfn = inject_rename(dfn)
     end
     if corrects7 .& ((ccd == "S7") .| (ccd == "S7I"))
@@ -104,13 +102,10 @@ function read_decam(base,date,filt,vers,ccd; corrects7=true)
         ref_im = read(f[ccd])
         close(f)
     end
-    f = FITS(wfn)
-    w_im = read(f[ccd])
-    close(f)
     f = FITS(dfn)
     d_im = read(f[ccd])
     close(f)
-    return ref_im, w_im, d_im
+    return ref_im, d_im
 end
 
 """
@@ -208,7 +203,7 @@ end
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     println("Started $ccd")
     # loads from disk
-    ref_im, w_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
+    ref_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     (sx, sy) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = read_crowdsource(basecat,date,filt,vers,ccd)
 
@@ -239,14 +234,14 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true)
     star_stats = zeros(Nstars,7)
 
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
-    in_w_im = ImageFiltering.padarray(w_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+2,Np+2)));
 
     for i=1:Nstars
-        data_in, data_w, stars_in, kmasked2d = stamp_cutter(x_stars[i],y_stars[i],in_image,in_w_im,in_stars_im,in_bmaskd;Np=33)
+        #create rounded and unrounded version of x/y stars
+        data_in, stars_in, kmasked2d = stamp_cutter(x_stars[i],y_stars[i],in_image,in_stars_im,in_bmaskd;Np=33)
         psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,x_stars[i],y_stars[i],flux_stars[i];Np=33,thr=thr)
-        star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,data_w,stars_in,psft))
+        star_stats[i,:] .= vec(condCovEst_wdiag(cov_loc[i,:,:],μ_loc[i,:],kstar,kpsf2d,data_in,stars_in,psft))
     end
     # prepare for export by appending to cat vectors
     for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])

@@ -20,17 +20,16 @@ per star statistics calculations.
 - `maskim`: input image of masked pixels
 - `Np`: size of covariance matrix footprint around each star
 """
-function stamp_cutter(cxx,cyy,residimIn,w_im,star_im,maskim;Np=33)
+function stamp_cutter(cxx,cyy,residimIn,star_im,maskim;Np=33)
     cx = round(Int64,cxx)
     cy = round(Int64,cyy)
     radNp = (Np-1)÷2
 
     cov_stamp = cx-radNp:cx+radNp,cy-radNp:cy+radNp
     @views data_in = residimIn[cov_stamp[1],cov_stamp[2]]
-    @views data_w = w_im[cov_stamp[1],cov_stamp[2]]
     @views stars_in = star_im[cov_stamp[1],cov_stamp[2]]
     @views kmasked2d = maskim[cov_stamp[1],cov_stamp[2]];
-    return data_in, data_w, stars_in, kmasked2d
+    return data_in, stars_in, kmasked2d
 end
 
 function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=20)
@@ -87,14 +86,14 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;export_mean=false,n_draw=0)
+function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,stars_in,psft,Np;export_mean=false,n_draw=0)
     k = .!kstar
     kpsf1d = kpsf2d[:]
     kpsf1d_kstar = kpsf1d[kstar]
-    cov_r = Symmetric(cov_loc) .+ diagm(0 => stars_in[:])
-    cov_kk = Symmetric(cov_r[k,k])
-    cov_kkstar = cov_r[k,kstar];
-    cov_kstarkstar = Symmetric(cov_r[kstar,kstar]);
+    for i=1:Np*Np cov_loc[i,i] += stars_in[i] end
+    cov_kk = Symmetric(cov_loc[k,k])
+    cov_kkstar = cov_loc[k,kstar];
+    cov_kstarkstar = cov_loc[kstar,kstar];
     icov_kkC = cholesky(cov_kk)
     icovkkCcovkkstar = icov_kkC\cov_kkstar
     predcovar = Symmetric(cov_kstarkstar - (cov_kkstar'*icovkkCcovkkstar))
@@ -105,16 +104,10 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
 
     kstarpredn = (cond_input[k]'*icovkkCcovkkstar)'
     kstarpred = kstarpredn .+ μ[kstar]
-    #This is not that impressive. chi2 of larger patch is more useful diagnostic
-    #chi20 = (kstarpredn'*ipcov*kstarpredn)
 
     @views p = psft[kpsf2d][:]
-    #@views pw = p.*data_w[kpsf2d][:]
-    #@views p2w = p.*pw
-
     ipcovCp = ipcovC\p
 
-    #@views std_w = sqrt(abs(pw'*predcovar[kpsf1d_kstar,kpsf1d_kstar]*pw))/sum(p2w)
     #@views std_wdiag = sqrt(abs(sum((pw.^(2)).*diag(predcovar[kpsf1d_kstar,kpsf1d_kstar]))))/sum(p2w)
     @views var_wdb = (p'*ipcovCp)
 
@@ -125,7 +118,6 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     # surrounding region... TO DO to implement
     out = []
     push!(out,[sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean])
-    #push!(out,[std_w std_wdiag sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean chi20])
     if export_mean
         mean_out = copy(data_in)
         mean_out[kstar] .= kstarpred
@@ -142,4 +134,35 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft;e
     end
 
     return out
+end
+
+function build_cov!(cov::Array{Float64,2},μ::Array{Float64,1},cx::Int64,cy::Int64,bimage::OffsetArray,bism::OffsetArray,Np::Int64,widx::Int64,widy::Int64)
+    halfNp = (Np-1) ÷ 2
+    Δr, Δc = cx-(halfNp+1), cy-(halfNp+1)
+    for dc=0:Np-1       # column shift loop
+        pcr = 1:Np-dc
+        for dr=1-Np:Np-1# row loop, incl negatives
+            if (dr < 0) & (dc == 0)
+                continue
+            end
+            if dr >= 0
+                prr = 1:Np-dr
+            end
+            if (dr < 0) & (dc > 0)
+                prr = 1-dr:Np
+            end
+
+            for pc=pcr, pr=prr
+                i = ((pc   -1)*Np)+pr
+                j = ((pc+dc-1)*Np)+pr+dr
+                @views μ1μ2 = bimage[pr+Δr,pc+Δc]*bimage[pr+dr+Δr,pc+dc+Δc]/((widx*widy)^2)
+                @views cov[i,j] = bism[pr+Δr,pc+Δc,dr+Np,dc+1]/(widx*widy) - μ1μ2
+                if i == j
+                    μ[i] = μ1μ2
+                end
+            end
+        end
+    end
+    cov .*= (widx*widy)/((widx*widy)-1)
+    return
 end

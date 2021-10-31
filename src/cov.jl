@@ -150,3 +150,23 @@ function boxsmoothMod!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int, px::Int
         end
     end
 end
+
+function cov_avg!(bimage, ism, bism, in_image, sx, sy; px0=0, py0=0, Np::Int=33, widx::Int=129, widy::Int=129)
+    Δx = (widx-1)÷2
+    Δy = (widy-1)÷2
+    halfNp = (Np-1) ÷ 2
+
+    boxsmoothMod!(bimage,in_image,widx,widy,sx,sy,halfNp+px0,halfNp+py0)
+    # loop over shifts
+    for dc=0:Np-1       # column shift loop
+        for dr=1-Np:Np-1   # row loop, incl negatives
+            if (dr < 0) & (dc == 0)
+                continue
+            end
+            # ism = image, shifted and multipled
+            ism .= in_image .* OffsetArrays.OffsetArray(ShiftedArrays.circshift(in_image.parent,(-dr, -dc)), OffsetArrays.Origin(in_image.offsets.+1))
+            @views boxsmoothMod!(bism[:,:,dr+Np,dc+1],ism,widx,widy,sx,sy,halfNp+px0,halfNp+py0) # bism = boxcar(ism)
+        end
+    end
+    return
+end
