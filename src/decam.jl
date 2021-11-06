@@ -275,15 +275,15 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     for jx=1:tilex, jy=1:tiley
         xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
         in_subimage .= in_image[xrng,yrng]
-        cov_avg_AKS!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
+        cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
         offx = padx-Δx-(jx-1)*stepx-1
         offy = pady-Δy-(jy-1)*stepy-1
         for i in star_ind
             build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
-            data_in, stars_in, kmasked2d = stamp_cutter_AKS(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
-            psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask_AKS(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
+            data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
+            psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
             try
-                star_stats[:,i] .= [condCovEst_wdiag_AKS(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
+                star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
             catch
                 star_stats[:,i] .= NaN
             end
