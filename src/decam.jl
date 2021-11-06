@@ -211,7 +211,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     end
 
     # loads from disk
-    ref_im, d_im = read_decam_AKS(base,date,filt,vers,ccd,corrects7=corrects7)
+    ref_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     bmaskd = (d_im .!= 0)
     (sx0, sy0) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = cloudCovErr.read_crowdsource(basecat,date,filt,vers,ccd)
