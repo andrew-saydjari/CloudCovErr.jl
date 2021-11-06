@@ -10,9 +10,52 @@ export gen_mask_staticPSF2!
 export prelim_infill!
 export add_sky_noise!
 export findmaxpsf
+export kstar_circle_mask
+export im_subrng
+
+function kstar_circle_mask(Np;rlim=256)
+    halfNp = (Np-1) ÷ 2
+    x = (-halfNp:halfNp)' .* ones(Int,Np)
+    y = ones(Int,Np)' .* (-halfNp:halfNp)
+    R = x.^2 .+ y.^2
+    return R.>rlim
+end
 
 function findmaxpsf(psfstamp1;thr=20)
     thr/maximum([psfstamp1[:,1]...,psfstamp1[1,:]...,psfstamp1[:,end]...,psfstamp1[end,:]...])
+end
+
+function im_subrng(jx,jy,cx,cy,sx,sy,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
+    lowbx = (1 + (jx-1)*stepx)
+    uppbx = (1 + jx*stepx-1)
+    lowby = (1 + (jy-1)*stepy)
+    uppby = (1 + jy*stepy-1)
+    # pad right and top by 2 to fix ragged
+    if uppbx > sx
+        uppbx = sx
+    end
+    if uppby > sy
+        uppby = sy
+    end
+    xrng = (lowbx-padx):(uppbx+padx)
+    yrng = (lowby-pady):(uppby+pady)
+
+    if jx == 1
+        lowbx-=px0
+    end
+    if jx == tilex
+        uppbx+=px0
+    end
+    if jy == 1
+        lowby-=py0
+    end
+    if jy == tiley
+        uppby+=py0
+    end
+
+    star_ind = findall((lowbx-0.5 .< cx .<= uppbx+0.5) .& (lowby-0.5 .< cy .<= uppby+0.5))
+
+    return xrng, yrng, star_ind
 end
 
 """
@@ -108,24 +151,39 @@ infill values.
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
 """
-function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;widx=19,widy=19)
-
+function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype::Int=32)
+    if ftype == 32
+        T = Float32
+    else
+        T = Float64
+    end
     Δx = (widx-1)÷2
     Δy = (widy-1)÷2
     (sx, sy) = size(testim)
+
+    widxMax = Int(((1.4^10)*widx)÷2)
+    widyMax = Int(((1.4^10)*widy)÷2)
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
     testim[bmaskim] .= 0;
     bmaskim2 .= copy(bmaskim)
     testim2 .= copy(testim)
 
+    #hopefully replace with the reflected indexedx arrays
+    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
+    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
+
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
     while any(bmaskim2) .& (cnt .< 10)
-        in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
-        in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(Δx+2,Δy+2)));
-        cloudCovErr.boxsmoothMod!(bimage, in_image, widx, widy, sx, sy, 0, 0)
-        cloudCovErr.boxsmoothMod!(bimageI, in_mask, widx, widy, sx, sy, 0, 0)
+        # this double deep view should be only 1 deep ideally... need the internal unwrap
+        @views in_image1 = in_image[(1-Δx):(sx+Δx),(1-Δy):(sy+Δy)]
+        @views in_mask1 = in_mask[(1-Δx):(sx+Δx),(1-Δy):(sy+Δy)]
+        (sx1, sy1) = size(in_image1)
+        tot = zeros(T,sx1)
+        totI = zeros(Int,sx1)
+        boxsmooth!(bimage,in_image1,tot,widx,widy)
+        boxsmooth!(bimageI,in_mask1,totI,widx,widy)
 
         goodpix .= (bimageI .> 10)
 
@@ -141,12 +199,14 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix;w
         Δx = (widx-1)÷2
         Δy = (widy-1)÷2
     end
-    println("Infilling completed after $cnt rounds with final width $wid")
+    println("Infilling $ccd completed after $cnt rounds with final width (widx,widy) = ($widx,$widy)")
+    flush(stdout)
 
     #catastrophic failure fallback
     if cnt == 10
         testim2[bmaskim2] .= StatsBase.median(testim)
         println("Infilling Failed Badly")
+        flush(stdout)
     end
     return
 end

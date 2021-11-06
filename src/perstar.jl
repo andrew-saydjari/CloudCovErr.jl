@@ -3,6 +3,7 @@ using LinearAlgebra
 export stamp_cutter
 export gen_pix_mask
 export condCovEst_wdiag
+export build_cov!
 
 """
     stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33) -> data_in, data_w, stars_in, kmasked2d
@@ -20,9 +21,7 @@ per star statistics calculations.
 - `maskim`: input image of masked pixels
 - `Np`: size of covariance matrix footprint around each star
 """
-function stamp_cutter(cxx,cyy,residimIn,star_im,maskim;Np=33)
-    cx = round(Int64,cxx)
-    cy = round(Int64,cyy)
+function stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33)
     radNp = (Np-1)÷2
 
     cov_stamp = cx-radNp:cx+radNp,cy-radNp:cy+radNp
@@ -32,7 +31,7 @@ function stamp_cutter(cxx,cyy,residimIn,star_im,maskim;Np=33)
     return data_in, stars_in, kmasked2d
 end
 
-function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=20)
+function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,thr=20)
 
     psft = psfmodel(x_star,y_star,Np)
 
@@ -42,12 +41,17 @@ function gen_pix_mask(kmasked2d,psfmodel,x_star,y_star,flux_star;Np=33,thr=20)
         kpsf2d = (psft .> thr/flux_star)
     end
 
-    kstar = (kmasked2d .| kpsf2d)[:]
+    kstar = (kmasked2d .| kpsf2d .| circmask)[:]
     cntks = count(kstar)
 
     dnt = 0
-    if cntks > 33^2-128 #this is about a 10% cut, and is the sum of bndry
+    if cntks > 33^2-128
         dnt = 1
+        kstar = (kmasked2d .| kpsf2d)[:]
+    end
+
+    if cntks > 33^2-128 #this is about a 10% cut, and is the sum of bndry
+        dnt = 2
         kmasked2d[1,:] .= 0
         kmasked2d[end,:] .= 0
         kmasked2d[:,1] .= 0
@@ -86,10 +90,9 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,stars_in,psft,Np;export_mean=false,n_draw=0)
-    k = .!kstar
-    kpsf1d = kpsf2d[:]
-    kpsf1d_kstar = kpsf1d[kstar]
+function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0)
+    k = .!km
+    kstar = kpsf2d[:]
     for i=1:Np*Np cov_loc[i,i] += stars_in[i] end
     cov_kk = Symmetric(cov_loc[k,k])
     cov_kkstar = cov_loc[k,kstar];
@@ -104,15 +107,14 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,stars_in,psft,Np;expor
 
     kstarpredn = (cond_input[k]'*icovkkCcovkkstar)'
     kstarpred = kstarpredn .+ μ[kstar]
-
     @views p = psft[kpsf2d][:]
     ipcovCp = ipcovC\p
 
     #@views std_wdiag = sqrt(abs(sum((pw.^(2)).*diag(predcovar[kpsf1d_kstar,kpsf1d_kstar]))))/sum(p2w)
     @views var_wdb = (p'*ipcovCp)
 
-    @views resid_mean = (uncond_input[kpsf1d]'*ipcovCp)./var_wdb
-    @views pred_mean = (kstarpred[kpsf1d_kstar]'*ipcovCp)./var_wdb
+    @views resid_mean = (uncond_input[kstar]'*ipcovCp)./var_wdb
+    @views pred_mean = (kstarpred'*ipcovCp)./var_wdb
 
     # Currently limited to the Np region. Often useful to have some context with a larger
     # surrounding region... TO DO to implement
@@ -136,7 +138,9 @@ function condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,stars_in,psft,Np;expor
     return out
 end
 
-function build_cov!(cov::Array{Float64,2},μ::Array{Float64,1},cx::Int64,cy::Int64,bimage::OffsetArray,bism::OffsetArray,Np::Int64,widx::Int64,widy::Int64)
+function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array{T,2},bism::Array{T,4},Np::Int,widx::Int,widy::Int) where T <:Union{Float32,Float64}
+    Δx = (widx-1)÷2
+    Δy = (widy-1)÷2
     halfNp = (Np-1) ÷ 2
     Δr, Δc = cx-(halfNp+1), cy-(halfNp+1)
     for dc=0:Np-1       # column shift loop
@@ -155,10 +159,10 @@ function build_cov!(cov::Array{Float64,2},μ::Array{Float64,1},cx::Int64,cy::Int
             for pc=pcr, pr=prr
                 i = ((pc   -1)*Np)+pr
                 j = ((pc+dc-1)*Np)+pr+dr
-                @views μ1μ2 = bimage[pr+Δr,pc+Δc]*bimage[pr+dr+Δr,pc+dc+Δc]/((widx*widy)^2)
-                @views cov[i,j] = bism[pr+Δr,pc+Δc,dr+Np,dc+1]/(widx*widy) - μ1μ2
+                @inbounds μ1μ2 = bimage[pr+Δr,pc+Δc]*bimage[pr+dr+Δr,pc+dc+Δc]/((widx*widy)^2)
+                @inbounds cov[i,j] = bism[pr+Δr,pc+Δc,dr+Np,dc+1]/(widx*widy) - μ1μ2
                 if i == j
-                    μ[i] = μ1μ2
+                    @inbounds μ[i] = μ1μ2
                 end
             end
         end
