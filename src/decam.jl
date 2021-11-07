@@ -104,7 +104,7 @@ function read_decam(base,date,filt,vers,ccd; corrects7=true)
         close(f)
     end
     f = FITS(dfn)
-    d_im = read(f[String(chop(ccd,tail=1))])
+    d_im = read(f[ccd])
     close(f)
     return ref_im, d_im
 end
