@@ -103,7 +103,7 @@ function read_decam(base,date,filt,vers,ccd; corrects7=true)
         close(f)
     end
     f = FITS(dfn)
-    d_im = read(f[ccd])
+    d_im = read(f[chop(ccd,tail=1)])
     close(f)
     return ref_im, d_im
 end
