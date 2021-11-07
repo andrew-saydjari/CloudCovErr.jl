@@ -56,7 +56,7 @@ end
 
 function inject_rename(fname)
     splitname = split(fname,"/")
-    splitname[4] = "decapsi"
+    #splitname[4] = "decapsi"
     return chop(join(splitname,"/"),tail=7)*"I.fits.fz"
 end
 
@@ -86,7 +86,7 @@ function read_decam(base,date,filt,vers,ccd; corrects7=true)
     dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"
     if last(ccd,1) == "I"
         ifn = inject_rename(ifn)
-        dfn = inject_rename(dfn)
+        #dfn = inject_rename(dfn)
     end
     if corrects7 .& ((ccd == "S7") .| (ccd == "S7I"))
         # a little wasteful to throw away load times in python for w_im and d_im
