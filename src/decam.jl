@@ -213,6 +213,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     # loads from disk
     ref_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     bmaskd = (d_im .!= 0)
+    d_im = nothing
     (sx0, sy0) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = cloudCovErr.read_crowdsource(basecat,date,filt,vers,ccd)
 
@@ -224,6 +225,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
     testim = copy(mod_im .- ref_im)
+    ref_im = nothing
     bimage = zeros(T,sx0,sy0)
     bimageI = zeros(Int64,sx0,sy0)
     testim2 = zeros(T,sx0,sy0)
@@ -231,6 +233,11 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
+    testim = nothing
+    bimage = nothing
+    bimageI = nothing
+    bmaskim2 = nothing
+    goodpix = nothing
 
     # exposure datetime based seed
     rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
@@ -252,9 +259,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     padx = Np+Δx+px0
     pady = Np+Δy+py0
     in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    testim2 = nothing
     in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflect,(Np+px0,Np+py0)));
+    sky_im = nothing
+    mod_im = nothing
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+px0,Np+py0)));
-
+    bmaskd = nothing
     # preallocate the cov and μ per star variables
     cov = zeros(T,Np*Np,Np*Np)
     μ = zeros(T,Np*Np)
