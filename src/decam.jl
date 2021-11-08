@@ -296,7 +296,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             try
                 star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
             catch
-                star_stats[:,i] .= NaN
+                star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
             end
         end
         cntStar = length(star_ind)

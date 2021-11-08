@@ -142,7 +142,8 @@ function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array
     Δx = (widx-1)÷2
     Δy = (widy-1)÷2
     halfNp = (Np-1) ÷ 2
-    Δr, Δc = cx-(halfNp+1), cy-(halfNp+1)
+    #Δr, Δc = cx-(halfNp+1), cy-(halfNp+1)
+    Δr, Δc = cx-(halfNp-1), cy-(halfNp-1)
     for dc=0:Np-1       # column shift loop
         pcr = 1:Np-dc
         for dr=1-Np:Np-1# row loop, incl negatives
