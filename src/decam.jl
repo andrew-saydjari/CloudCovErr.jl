@@ -286,8 +286,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
         in_subimage .= in_image[xrng,yrng]
         cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
-        offx = padx-Δx-(jx-1)*stepx-1
-        offy = pady-Δy-(jy-1)*stepy-1
+        offx = padx-Δx-(jx-1)*stepx
+        offy = pady-Δy-(jy-1)*stepy
         for i in star_ind
             build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
             data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
