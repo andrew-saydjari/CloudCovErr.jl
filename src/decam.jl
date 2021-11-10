@@ -258,12 +258,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     Δy = (widy-1)÷2
     padx = Np+Δx+px0
     pady = Np+Δy+py0
-    in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:symmetric,(padx+2,pady+2)));
     testim2 = nothing
-    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflect,(Np+px0,Np+py0)));
+    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:symmetric,(Np+px0,Np+py0)));
     sky_im = nothing
     mod_im = nothing
-    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflect,(Np+px0,Np+py0)));
+    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:symmetric,(Np+px0,Np+py0)));
     bmaskd = nothing
     # preallocate the cov and μ per star variables
     cov = zeros(T,Np*Np,Np*Np)
