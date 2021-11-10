@@ -264,6 +264,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
     in_sky_im = nothing
 
+    println((in_image[-1,1]-in_image[2,1],in_image[-1,1]))
+
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(x_stars)
     star_stats = zeros(T,6,Nstars)
