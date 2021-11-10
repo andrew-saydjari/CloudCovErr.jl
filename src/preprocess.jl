@@ -170,8 +170,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
     testim2 .= copy(testim)
 
     #hopefully replace with the reflected indexedx arrays
-    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:symmetric,(widxMax,widyMax)));
-    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:symmetric,(widxMax,widyMax)));
+    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflective,(widxMax,widyMax)));
+    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflective,(widxMax,widyMax)));
 
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
@@ -225,12 +225,12 @@ reproducible unit testing.
 - `gain`: gain of detector to convert from photon count noise to detector noise
 - `seed`: random seed for random generator
 """
-function add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
+function add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
     rng = MersenneTwister(seed)
-    for j=1:size(testim2)[2], i=1:size(testim2)[1]
-        if maskim0[i,j]
-            intermed = -(rand(rng, Distributions.Poisson(convert(Float64,gain*(skyim3[i,j]-testim2[i,j]))))/gain.-skyim3[i,j])
-            testim2[i,j] = intermed
+    for i in eachindex(testim2)
+        if maskim[i]
+            intermed = -(rand(rng, Distributions.Poisson(convert(Float64,gain*(skyim[i]-testim2[i]))))/gain.-skyim[i])
+            testim2[i] = intermed
         end
     end
 end

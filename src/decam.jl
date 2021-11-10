@@ -239,32 +239,35 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     bmaskim2 = nothing
     goodpix = nothing
 
-    # exposure datetime based seed
-    rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
-    cloudCovErr.add_sky_noise!(testim2,bmaskd,sky_im,gain;seed=rndseed)
-
-    ## iterate over all star positions and compute errorbars/debiasing corrections
-    (Nstars,) = size(x_stars)
-    star_stats = zeros(T,6,Nstars)
-
     ## calculate the star farthest outside the edge of the image in x and y
     cx = round.(Int,x_stars)
     cy = round.(Int,y_stars)
     px0 = outest_bounds(cx,sx0)
     py0 = outest_bounds(cy,sy0)
 
-    ## ideally these change to reflective indexed arrays
+    ## these have to be allocating to get the noise model right
     Δx = (widx-1)÷2
     Δy = (widy-1)÷2
     padx = Np+Δx+px0
     pady = Np+Δy+py0
-    in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:symmetric,(padx+2,pady+2)));
+    in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflective,(padx+2,pady+2)));
     testim2 = nothing
-    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:symmetric,(Np+px0,Np+py0)));
+    in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflective,(padx+2,pady+2)));
+    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflective,(padx+2,pady+2)));
     sky_im = nothing
     mod_im = nothing
-    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:symmetric,(Np+px0,Np+py0)));
+    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Pad(:reflective,(padx+2,pady+2)));
     bmaskd = nothing
+
+    # exposure datetime based seed
+    rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
+    cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
+    in_sky_im = nothing
+
+    ## iterate over all star positions and compute errorbars/debiasing corrections
+    (Nstars,) = size(x_stars)
+    star_stats = zeros(T,6,Nstars)
+
     # preallocate the cov and μ per star variables
     cov = zeros(T,Np*Np,Np*Np)
     μ = zeros(T,Np*Np)
@@ -277,6 +280,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     stepx = (sx0+2) ÷ tilex
     stepy = (sy0+2) ÷ tiley
 
+    # precallocate the image subblocks
     in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
     ism = zeros(T,stepx+2*padx,stepy+2*pady)
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
