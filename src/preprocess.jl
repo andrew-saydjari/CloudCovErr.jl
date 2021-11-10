@@ -170,8 +170,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
     testim2 .= copy(testim)
 
     #hopefully replace with the reflected indexedx arrays
-    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflective,(widxMax,widyMax)));
-    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflective,(widxMax,widyMax)));
+    in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
+    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
 
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
