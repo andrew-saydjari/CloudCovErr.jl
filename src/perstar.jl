@@ -161,7 +161,9 @@ function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array
                 i = ((pc   -1)*Np)+pr
                 j = ((pc+dc-1)*Np)+pr+dr
                 @inbounds μ1μ2 = bimage[pr+Δr,pc+Δc]*bimage[pr+dr+Δr,pc+dc+Δc]/((widx*widy)^2)
-                @inbounds cov[i,j] = bism[pr+Δr,pc+Δc,dr+Np,dc+1]/(widx*widy) - μ1μ2
+                t = bism[pr+Δr,pc+Δc,dr+Np,dc+1]/(widx*widy) - μ1μ2
+                @inbounds cov[i,j] = t
+                @inbounds cov[j,i] = t
                 if i == j
                     @inbounds μ[i] = μ1μ2
                 end
