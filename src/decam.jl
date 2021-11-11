@@ -264,8 +264,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
     in_sky_im = nothing
 
-    println((in_image[-1,1]-in_image[2,1],in_image[-1,1]))
-
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(x_stars)
     star_stats = zeros(T,6,Nstars)
@@ -302,7 +300,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             try
                 star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
             catch
-                push!(covl,(cov,μ,i))
+                push!(covl,(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,i))
                 star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
             end
         end
