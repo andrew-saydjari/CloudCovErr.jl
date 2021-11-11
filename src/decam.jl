@@ -233,6 +233,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
+    return testim2
     testim = nothing
     bimage = nothing
     bimageI = nothing
