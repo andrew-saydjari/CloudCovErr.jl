@@ -304,7 +304,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
                     #push!(covl,(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft,i))
                     star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
                 end
-                return cov, μ
+                return bimage
             end
         end
         cntStar = length(star_ind)
