@@ -321,7 +321,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     #cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd processing $cntStar0 of $Nstars stars")
     flush(stdout)
-    return star_stats, covl, in_image
+    return star_stats, covl, in_image, in_bmaskd
 end
 
 function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33)
