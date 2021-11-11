@@ -88,10 +88,12 @@ uncertainities are outputs as well as the chi2 value for the predicted pixels.
 - `data_w`: weight image in local patch
 - `stars_in`: image of counts from star alone in local patch
 """
-function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0)
+function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0,diag_on=true)
     k = .!km
     kstar = kpsf2d[:]
-    for i=1:Np*Np cov_loc[i,i] += stars_in[i] end
+    if diag_on
+        for i=1:Np*Np cov_loc[i,i] += stars_in[i] end
+    end
     cov_kk = Symmetric(cov_loc[k,k])
     cov_kkstar = cov_loc[k,kstar];
     cov_kstarkstar = cov_loc[kstar,kstar];

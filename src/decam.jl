@@ -298,7 +298,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
             psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
             try
-                star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
+                star_stats[:,i] .= [condCovEst_wdiag(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
             catch
                 push!(covl,(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,i))
                 star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
