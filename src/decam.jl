@@ -286,7 +286,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
     bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
 
-    covl = []
+    #covl = []
     for jx=1:tilex, jy=1:tiley
         xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
         in_subimage .= in_image[xrng,yrng]
@@ -297,10 +297,13 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
             data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
             psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
+            if i == 533
+                return cov, μ
+            end
             try
                 star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
             catch
-                push!(covl,(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft,i))
+                #push!(covl,(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft,i))
                 star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
             end
         end
@@ -319,7 +322,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     #cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd processing $cntStar0 of $Nstars stars")
     flush(stdout)
-    return star_stats, covl, in_image, in_bmaskd
+    return star_stats #, covl, in_image, in_bmaskd
 end
 
 function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33)
