@@ -294,7 +294,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         offx = padx-Δx-(jx-1)*stepx
         offy = pady-Δy-(jy-1)*stepy
         for i in star_ind
-            if i == 2026
+            if i == 100
                 build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
                 data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
                 psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
@@ -304,7 +304,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
                     #push!(covl,(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft,i))
                     star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
                 end
-                return bimage
+                return cov,μ,kstar,kpsf2d,data_in,stars_in,psft,bimage
             end
         end
         cntStar = length(star_ind)
