@@ -113,13 +113,22 @@ function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,expor
     #@views std_wdiag = sqrt(abs(sum((pw.^(2)).*diag(predcovar[kpsf1d_kstar,kpsf1d_kstar]))))/sum(p2w)
     @views var_wdb = (p'*ipcovCp)
 
+    var_diag = 0
+    for i in 1:size(predcovar)[1]
+        var_diag += (p[i]^2)/predcovar[i,i]
+    end
+
     @views resid_mean = (uncond_input[kstar]'*ipcovCp)./var_wdb
     @views pred_mean = (kstarpred'*ipcovCp)./var_wdb
+
+    #if we can afford it, a nice check would be how good of a covariance matrix
+    #cov is for the k pixels (which we think are clean)
+    chi2 = cond_input[k]'*icov_kkC\cond_input[k]
 
     # Currently limited to the Np region. Often useful to have some context with a larger
     # surrounding region... TO DO to implement
     out = []
-    push!(out,[sqrt(var_wdb^(-1)) resid_mean+pred_mean resid_mean pred_mean])
+    push!(out,[sqrt(var_wdb^(-1)) sqrt(var_diag^(-1)) pred_mean-resid_mean resid_mean pred_mean chi2])
     if export_mean
         mean_out = copy(data_in)
         mean_out[kstar] .= kstarpred
