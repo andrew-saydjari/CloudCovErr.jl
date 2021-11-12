@@ -44,7 +44,7 @@ function add_rndm_stars!(image,psf_sp,psfmask_sp,Nstar;msz = 59)
         cy = rand(rng,1:4094-msz)
         cxlst[i] = cx
         cylst[i] = cy
-        mask[cx+1:(cx+msz),cy+1:(cy+msz)] .+= psfmask_sp
+        mask[cx+1:(cx+msz),cy+1:(cy+msz)] .|= psfmask_sp
         image[cx+1:(cx+msz),cy+1:(cy+msz)] .+=  30000 .*psf_sp
     end
     return mask
