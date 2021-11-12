@@ -1,9 +1,11 @@
-using LinearAlgebra
-using StatsBase
-
 export fil_array!
 export add_rndm_stars!
 export run_fil
+
+using LinearAlgebra
+using StatsBase
+using cloudCovErr
+using PyCall
 
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
