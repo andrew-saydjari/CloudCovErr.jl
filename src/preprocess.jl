@@ -234,3 +234,10 @@ function add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
         end
     end
 end
+
+function add_noise!(testim2,gain;seed=2021)
+    rng = MersenneTwister(seed)
+    for i in eachindex(testim2)
+        @inbounds testim2[i] = rand(rng, Distributions.Poisson(convert(Float64,gain*testim2[i])))/gain
+    end
+end
