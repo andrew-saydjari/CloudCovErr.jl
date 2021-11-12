@@ -123,7 +123,7 @@ function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,expor
 
     #if we can afford it, a nice check would be how good of a covariance matrix
     #cov is for the k pixels (which we think are clean)
-    chi2 = cond_input[k]'*icov_kkC\cond_input[k]
+    chi2 = cond_input[k]'*(icov_kkC\cond_input[k])
 
     # Currently limited to the Np region. Often useful to have some context with a larger
     # surrounding region... TO DO to implement
