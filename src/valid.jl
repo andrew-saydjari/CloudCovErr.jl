@@ -6,6 +6,7 @@ using LinearAlgebra
 using StatsBase
 using cloudCovErr
 using PyCall
+import Conda
 
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
