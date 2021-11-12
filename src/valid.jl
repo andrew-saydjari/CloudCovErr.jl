@@ -66,7 +66,7 @@ function run_fil(base,date,filt,vers,basecat,ccd;corrects7=true,msz=59,ftype::In
     nodeblend_maskbit = 2^30
     sharp_maskbit = 2^31
     d_im = zeros(Int32,sx0, sy0) .+ nodeblend_maskbit .+ sharp_maskbit;
-    med = median(ref_im)
+    med = StatsBase.median(ref_im)
     ref_im = nothing
 
     in_img = med.*ones(T, sx0, sy0)
