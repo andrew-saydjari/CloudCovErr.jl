@@ -18,16 +18,16 @@ function __init__()
     """
 end
 
-function fil_array!(image,sz)
+function fil_array!(image;msz=59)
     (Nx, Ny) = size(image)
     x=1:Nx
     xx = ones(Ny)' .* x
-    x0 = 520-sz
+    x0 = 520-msz
     for lam0 in [4,20,50]
-        x0 += maximum([6*lam0,2*sz])
+        x0 += maximum([6*lam0,2*msz])
         image += 30 .*exp.(-(xx.-x0).^2 ./(lam0^2))
 
-        x0 += maximum([6*lam0,2*sz])
+        x0 += maximum([6*lam0,2*msz])
         image -= 30 .*exp.(-(xx.-x0).^2 ./(lam0^2))
     end
     return image
