@@ -33,7 +33,7 @@ function __init__()
     #     Conda.add("crowdsourcephoto",channel="conda-forge")
     # end
     py"""
-    sys.path.append('/n/home12/saydjari/finksage/ExtSoftware/crowdsource_new/python')
+    sys.path.append('/n/home12/saydjari/finksage/ExtSoftware/crowdsource_new/crowdsource')
     import crowdsource.psf as psfmod
     from crowdsource.decam_proc import read_data
     from astropy.io import fits
