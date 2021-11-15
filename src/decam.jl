@@ -235,7 +235,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
-    testim = nothing
+    testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
     bimage = nothing
     bimageI = nothing
     bmaskim2 = nothing
@@ -254,8 +254,10 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     pady = Np+Δy+py0
     in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     testim2 = nothing
+    in_image_raw = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    testim = nothing
     in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    in_stars_im = ImageFiltering.padarray(mod_im.-sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    in_stars_im = ImageFiltering.padarray((mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     sky_im = nothing
     mod_im = nothing
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Fill(true,(padx+2,pady+2)));
@@ -288,28 +290,29 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
     bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
 
-    #covl = []
     for jx=1:tilex, jy=1:tiley
         xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
-        in_subimage .= in_image[xrng,yrng]
-        cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
-        offx = padx-Δx-(jx-1)*stepx
-        offy = pady-Δy-(jy-1)*stepy
-        for i in star_ind
-            if i == 200
-                build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
-                data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image,in_stars_im,in_bmaskd;Np=Np)
-                psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
-                try
-                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
-                catch
-                    #push!(covl,(deepcopy(cov),deepcopy(μ),kstar,kpsf2d,data_in,stars_in,psft,i))
-                    star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
+        cntStar = length(star_ind)
+        if cntStar > 0
+            in_subimage .= in_image[xrng,yrng]
+            cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
+            offx = padx-Δx-(jx-1)*stepx
+            offy = pady-Δy-(jy-1)*stepy
+
+            for i in star_ind
+                if i == 200
+                    build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
+                    data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
+                    psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
+                    try
+                        star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
+                    catch
+                        star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
+                    end
+                    return cov,μ,kstar,kpsf2d,data_in,stars_in,psft,bimage
                 end
-                return cov,μ,kstar,kpsf2d,data_in,stars_in,psft,bimage
             end
         end
-        cntStar = length(star_ind)
         cntStar0 += cntStar
         println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
         flush(stdout)
