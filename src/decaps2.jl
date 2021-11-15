@@ -92,7 +92,7 @@ function run_wrapper()
 
     cloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"],
-        thr=parg["thr"],Np=parg["Np"],widx=parg["widx"],widy=wy,tilex=parg["tilex"],tiley=tiley,ftype=parg["ftype"])
+        thr=parg["thr"],Np=parg["Np"],widx=parg["wx"],widy=wy,tilex=parg["tilex"],tiley=tiley,ftype=parg["ftype"])
 end
 
 run_wrapper()
