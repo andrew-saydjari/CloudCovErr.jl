@@ -39,9 +39,29 @@ function parse_commandline()
             help = "sidelength size of spatial covariance matrix (must be int, odd)"
             arg_type = Int
             default = 33
-        "--cS7",
+        "--wx", "-w"
+            help = "sidelength size of sample averaging (must be int, odd)"
+            arg_type = Int
+            default = 129
+        "--wy"
+            help = "sidelength size of sample averaging (must be int, odd)"
+            arg_type = Int
+            default = -1
+        "--tilex"
+            help = "number of tiles to divide image into along x"
+            arg_type = Int
+            default = 1
+        "--tiley"
+            help = "number of tiles to divide image into along y"
+            arg_type = Int
+            default = -1
+        "--cS7"
             help = "when set attempts to correct the amplifier offset in S7 fields"
             action = :store_true
+        "--ftype", "-f"
+            help = "use float n (32 or 64)"
+            arg_type = Int
+            default = 32
         # run settings
         "--resume", "-r"
             help = "resume partially completed file where leftoff"
@@ -57,9 +77,22 @@ end
 
 function run_wrapper()
     parg = parse_commandline()
+
+    # handle default x==y conditions
+    if parg["wy"] == -1
+        wy = parg["wx"]
+    else
+        wy = parg["wy"]
+    end
+    if parg["tiley"] == -1
+        tiley = parg["tilex"]
+    else
+        tiley = parg["tiley"]
+    end
+
     cloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"],
-        thr=parg["thr"],Np=parg["Np"])
+        thr=parg["thr"],Np=parg["Np"],widx=parg["widx"],widy=wy,tilex=parg["tilex"],tiley=tiley,ftype=parg["ftype"])
 end
 
 run_wrapper()

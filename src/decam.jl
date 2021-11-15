@@ -330,7 +330,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     return star_stats #, covl, in_image, in_bmaskd
 end
 
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     println("Starting to process "*infn)
 
@@ -368,7 +368,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
 
     # main loop over ccds
     for ccd in extnames
-        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7)
+        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7,widx=widx,widy=widx,tilex=tilex,tiley=tilex,ftype=ftype))
     end
 end
 
