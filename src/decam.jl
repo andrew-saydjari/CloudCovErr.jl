@@ -270,7 +270,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(x_stars)
-    star_stats = zeros(T,6,Nstars)
+    star_stats = zeros(T,10,Nstars)
 
     # preallocate the cov and μ per star variables
     cov = zeros(T,Np*Np,Np*Np)
@@ -300,16 +300,13 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             offy = pady-Δy-(jy-1)*stepy
 
             for i in star_ind
-                if i == 200
-                    build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
-                    data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
-                    psft, kstar, kpsf2d, cntks, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
-                    try
-                        star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., cntks, dnt]
-                    catch
-                        star_stats[:,i] .= [NaN, NaN, NaN, NaN, cntks, dnt]
-                    end
-                    return cov,μ,kstar,kpsf2d,data_in,stars_in,psft,bimage
+                build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
+                data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
+                psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
+                try
+                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., kcond0, kcond, kpred, dnt]
+                catch
+                    star_stats[:,i] .= [NaN, NaN, NaN, NaN, NaN, NaN, kcond0, kcond, kpred, dnt]
                 end
             end
         end
@@ -320,14 +317,14 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     # prepare for export by appending to cat vectors
     ## if doing the ops float64, might want to do a final convert to float32 before saving
-#     for (ind,col) in enumerate(["dcflux","dcflux_diag","dfdb","fdb","fdb_res","fdb_pred","gchi2"])
-#         push!(wcol,col)
-#         push!(w,star_stats[ind,:])
-#     end
-    #cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+    for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
+        push!(wcol,col)
+        push!(w,star_stats[ind,:])
+    end
+    cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd processing $cntStar0 of $Nstars stars")
     flush(stdout)
-    return star_stats #, covl, in_image, in_bmaskd
+    return #star_stats #, covl, in_image, in_bmaskd
 end
 
 function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)

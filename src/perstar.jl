@@ -42,27 +42,31 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
     end
 
     kstar = (kmasked2d .| kpsf2d .| circmask)
-    cntks = count(kstar)
+    kcond0 = Np^2-count(kstar)
 
     dnt = 0
-    if cntks > 33^2-248
+    if kcond0 < 4*Np
         dnt = 1
         kstar = (kmasked2d .| kpsf2d)
     end
 
-    if cntks > 33^2-248 #this is about a 10% cut, and is the sum of bndry
+    if kcond0 < 4*Np #this is about a 10% cut, and is the sum of bndry
         dnt = 2
-        kstar[1:2,:] .= 0
-        kstar[(end-1):end,:] .= 0
-        kstar[:,1:2] .= 0
-        kstar[:,(end-1):end] .= 0
+        kstar[1,:] .= 0
+        kstar[end,:] .= 0
+        kstar[:,1] .= 0
+        kstar[:,end] .= 0
 
-        kpsf2d[1:2,:] .= 0
-        kpsf2d[(end-1):end,:] .= 0
-        kpsf2d[:,1:2] .= 0
-        kpsf2d[:,(end-1):end] .= 0
+        kpsf2d[1,:] .= 0
+        kpsf2d[end,:] .= 0
+        kpsf2d[:,1] .= 0
+        kpsf2d[:,end] .= 0
     end
-    return psft, kstar[:], kpsf2d, cntks, dnt
+
+    kpred = count(kpsf2d)
+    kcond = Np^2-count(kstar)
+
+    return psft, kstar[:], kpsf2d, kcond0, kcond, kpred, dnt
 end
 
 """
