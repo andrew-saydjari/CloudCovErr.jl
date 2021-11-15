@@ -227,7 +227,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
     testim = copy(mod_im .- ref_im)
-    ref_im = nothing
     bimage = zeros(T,sx0,sy0)
     bimageI = zeros(Int64,sx0,sy0)
     testim2 = zeros(T,sx0,sy0)
@@ -236,6 +235,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
     testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
+    ref_im = nothing
     bimage = nothing
     bimageI = nothing
     bmaskim2 = nothing
