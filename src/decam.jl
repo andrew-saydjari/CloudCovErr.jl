@@ -315,6 +315,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
         flush(stdout)
     end
+    println("this is the dev version")
     return star_stats, out
     # prepare for export by appending to cat vectors
     ## if doing the ops float64, might want to do a final convert to float32 before saving
