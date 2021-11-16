@@ -276,7 +276,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     # exposure datetime based seed
     rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
-    cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
+    #cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
     in_sky_im = nothing
 
     ## iterate over all star positions and compute errorbars/debiasing corrections
