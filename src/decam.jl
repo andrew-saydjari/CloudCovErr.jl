@@ -245,6 +245,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
     testim = copy(test) ##FIXME should not be overwritten
+    testim2 = copy(test) #only for testing
     ref_im = nothing
     bimage = nothing
     bimageI = nothing
