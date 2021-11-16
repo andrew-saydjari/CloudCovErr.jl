@@ -176,6 +176,7 @@ function load_psfmodel_cs(base,date,filt,vers,ccd)
     return psfmodel_jl
 end
 
+#ok we should check that the types are right here
 function save_fxn(wcol,w,base,date,filt,vers,ccd)
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
     write(f,wcol,w,name=ccd*"_CAT")
@@ -234,6 +235,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
+    return testim2
     testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
     ref_im = nothing
     bimage = nothing
