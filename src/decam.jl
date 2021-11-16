@@ -290,7 +290,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     ism = zeros(T,stepx+2*padx,stepy+2*pady)
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
     bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
-
+    out = []
     for jx=1:tilex, jy=1:tiley
         xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
         cntStar = length(star_ind)
@@ -299,7 +299,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
             offx = padx-Δx-(jx-1)*stepx
             offy = pady-Δy-(jy-1)*stepy
-
+            push!(out,[cx.+offx,cy.+offy,copy(bimage),copy(bism),star_ind])
             for i in star_ind
                 build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
                 data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
@@ -315,16 +315,16 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
         flush(stdout)
     end
-
+    return star_stats, out
     # prepare for export by appending to cat vectors
     ## if doing the ops float64, might want to do a final convert to float32 before saving
-    for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
-        push!(wcol,col)
-        push!(w,star_stats[ind,:])
-    end
-    cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
-    println("Saved $ccd processing $cntStar0 of $Nstars stars")
-    flush(stdout)
+    # for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
+    #     push!(wcol,col)
+    #     push!(w,star_stats[ind,:])
+    # end
+    # cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+    # println("Saved $ccd processing $cntStar0 of $Nstars stars")
+    # flush(stdout)
     return #star_stats #, covl, in_image, in_bmaskd
 end
 
