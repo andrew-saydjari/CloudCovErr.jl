@@ -221,8 +221,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cov2 = CovarianceFunction(2, Exponential(.5))
     ptsx = range(0, stop=10, length=2046)
     ptsy = range(0, stop=20, length=4094)
-    grf = GaussianRandomField(cov2, CirculantEmbedding(), ptsx, ptsy, minpadding=4001)
-    ref_im = sample(grf);
+    grf = GaussianRandomField(100, cov2, CirculantEmbedding(), ptsx, ptsy, minpadding=4001)
+    test = sample(grf);
 
     bmaskd = (d_im .!= 0)
     d_im = nothing
@@ -236,7 +236,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     # mask bad camera pixels/cosmic rays, then mask out star centers
     cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
-    testim = copy(mod_im .- ref_im)
+    testim = copy(test)
     bimage = zeros(T,sx0,sy0)
     bimageI = zeros(Int64,sx0,sy0)
     testim2 = zeros(T,sx0,sy0)
@@ -244,7 +244,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
-    testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
+    testim = copy(test) ##FIXME should not be overwritten
     ref_im = nothing
     bimage = nothing
     bimageI = nothing
