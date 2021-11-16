@@ -20,6 +20,8 @@ import StatsBase
 using Random
 using LinearAlgebra
 import Conda
+#only for testing
+using GaussianRandomFields
 
 """
     __int__()
@@ -215,6 +217,13 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     # loads from disk
     ref_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
+    ## testing insert
+    cov2 = CovarianceFunction(2, Exponential(.5))
+    ptsx = range(0, stop=10, length=2046)
+    ptsy = range(0, stop=20, length=4094)
+    grf = GaussianRandomField(cov2, CirculantEmbedding(), ptsx, ptsy, minpadding=4001)
+    ref_im = sample(grf);
+
     bmaskd = (d_im .!= 0)
     d_im = nothing
     (sx0, sy0) = size(ref_im)
