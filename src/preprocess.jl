@@ -229,7 +229,7 @@ function add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
     rng = MersenneTwister(seed)
     for i in eachindex(testim2)
         if maskim[i]
-            intermed = -(rand(rng, Distributions.Poisson(convert(Float64,gain*(skyim[i]-testim2[i]))))/gain.-skyim[i])
+            intermed = -(rand(rng, Distributions.Poisson(convert(Float64,gain*(abs.(skyim[i]-testim2[i])))))/gain.-skyim[i])
             testim2[i] = intermed
         end
     end
