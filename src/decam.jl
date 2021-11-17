@@ -258,7 +258,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     in_image_raw = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     testim = nothing
     in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    in_stars_im = ImageFiltering.padarray((mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    in_stars_im = ImageFiltering.padarray(abs.(mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     sky_im = nothing
     mod_im = nothing
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Fill(true,(padx+2,pady+2)));
@@ -305,7 +305,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
                 data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
                 psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
                 try
-                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., kcond0, kcond, kpred, dnt]
+                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,diag_on=false)[1]..., kcond0, kcond, kpred, dnt]
                 catch
                     star_stats[:,i] .= [NaN, NaN, NaN, NaN, NaN, NaN, kcond0, kcond, kpred, dnt]
                 end
