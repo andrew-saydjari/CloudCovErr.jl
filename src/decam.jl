@@ -176,10 +176,15 @@ function load_psfmodel_cs(base,date,filt,vers,ccd)
     return psfmodel_jl
 end
 
-#ok we should check that the types are right here
 function save_fxn(wcol,w,base,date,filt,vers,ccd)
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    write(f,wcol,w,name=ccd*"_CAT")
+    if (wcol == "passno") | (wcol == "dnt")
+        write(f,wcol,convert.(Int8,w),name=ccd*"_CAT")
+    elseif ((wcol == "kcond0") | (wcol == "kcond")) | (wcol == "kpred")
+        write(f,wcol,convert.(Int32,w),name=ccd*"_CAT")
+    else
+        write(f,wcol,w,name=ccd*"_CAT")
+    end
     close(f)
 end
 
@@ -315,18 +320,16 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
         flush(stdout)
     end
-    println("this is the dev version")
-    return star_stats, out
     # prepare for export by appending to cat vectors
-    ## if doing the ops float64, might want to do a final convert to float32 before saving
-    # for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
-    #     push!(wcol,col)
-    #     push!(w,star_stats[ind,:])
-    # end
-    # cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
-    # println("Saved $ccd processing $cntStar0 of $Nstars stars")
-    # flush(stdout)
-    return #star_stats #, covl, in_image, in_bmaskd
+    # if doing the ops float64, might want to do a final convert to float32 before saving
+    for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
+        push!(wcol,col)
+        push!(w,star_stats[ind,:])
+    end
+    cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+    println("Saved $ccd processing $cntStar0 of $Nstars stars")
+    flush(stdout)
+    return
 end
 
 function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
