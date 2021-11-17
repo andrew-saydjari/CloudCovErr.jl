@@ -20,8 +20,6 @@ import StatsBase
 using Random
 using LinearAlgebra
 import Conda
-#only for testing
-using GaussianRandomFields
 
 """
     __int__()
@@ -217,13 +215,6 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     # loads from disk
     ref_im, d_im = read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
-    ## testing insert
-    cov2 = CovarianceFunction(2, Exponential(.5))
-    ptsx = range(0, stop=10, length=2046)
-    ptsy = range(0, stop=20, length=4094)
-    grf = GaussianRandomField(100, cov2, CirculantEmbedding(), ptsx, ptsy, minpadding=4001)
-    test = sample(grf);
-
     bmaskd = (d_im .!= 0)
     d_im = nothing
     (sx0, sy0) = size(ref_im)
@@ -236,7 +227,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     # mask bad camera pixels/cosmic rays, then mask out star centers
     cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
-    testim = copy(test)
+    testim = copy(mod_im .- ref_im)
     bimage = zeros(T,sx0,sy0)
     bimageI = zeros(Int64,sx0,sy0)
     testim2 = zeros(T,sx0,sy0)
@@ -244,8 +235,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     goodpix = zeros(Bool,sx0,sy0)
 
     prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
-    testim = copy(test) ##FIXME should not be overwritten
-    testim2 = copy(test) #only for testing
+    testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
     ref_im = nothing
     bimage = nothing
     bimageI = nothing
@@ -268,7 +258,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     in_image_raw = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     testim = nothing
     in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    in_stars_im = ImageFiltering.padarray((mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+    in_stars_im = ImageFiltering.padarray(abs.(mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
     sky_im = nothing
     mod_im = nothing
     in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Fill(true,(padx+2,pady+2)));
@@ -276,7 +266,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
 
     # exposure datetime based seed
     rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
-    #cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
+    cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
     in_sky_im = nothing
 
     ## iterate over all star positions and compute errorbars/debiasing corrections
@@ -315,7 +305,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
                 data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
                 psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
                 try
-                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,diag_on=false)[1]..., kcond0, kcond, kpred, dnt]
+                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft)[1]..., kcond0, kcond, kpred, dnt]
                 catch
                     star_stats[:,i] .= [NaN, NaN, NaN, NaN, NaN, NaN, kcond0, kcond, kpred, dnt]
                 end
