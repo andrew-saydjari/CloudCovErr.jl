@@ -177,14 +177,15 @@ function load_psfmodel_cs(base,date,filt,vers,ccd)
 end
 
 function save_fxn(wcol,w,base,date,filt,vers,ccd)
-    f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
-    if (wcol == "passno") | (wcol == "dnt")
-        write(f,wcol,convert.(Int8,w),name=ccd*"_CAT")
-    elseif ((wcol == "kcond0") | (wcol == "kcond")) | (wcol == "kpred")
-        write(f,wcol,convert.(Int32,w),name=ccd*"_CAT")
-    else
-        write(f,wcol,w,name=ccd*"_CAT")
+    for i=1:length(wcol)
+        if (wcol[i] == "passno") | (wcol[i] == "dnt")
+            w[i] = convert.(Int8,w[i])
+        elseif ((wcol[i] == "kcond0") | (wcol[i] == "kcond")) | (wcol[i] == "kpred")
+            w[i] = convert.(Int32,w[i])
+        end
     end
+    f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
+    write(f,wcol,w,name=ccd*"_CAT")
     close(f)
 end
 
