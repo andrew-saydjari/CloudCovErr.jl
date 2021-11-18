@@ -338,6 +338,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     println("Saved $ccd processing $cntStar0 of $Nstars stars")
     flush(stdout)
+    pdefer = count(isnan.(star_stats[1,:]))
     if pdefer > 0
         println("There were $pdefer posDef errors")
         flush(stdout)
