@@ -257,7 +257,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     bimageI = nothing
     bmaskim2 = nothing
     goodpix = nothing
-
+    return testim2
     ## calculate the star farthest outside the edge of the image in x and y
     cx = round.(Int,x_stars)
     cy = round.(Int,y_stars)
