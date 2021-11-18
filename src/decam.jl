@@ -94,6 +94,7 @@ function read_decam(base,date,filt,vers,ccd; corrects7=true)
         # a little wasteful to throw away load times in python for w_im and d_im
         # but we need the crowdsource formatting for s7 correction and it is easiest
         # to keep the disCovErr formatting consistent
+        wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
         py_ref_im, py_w_im, py_d_im, nebprob = py"read_data"(ifn,wfn,dfn,ccd,maskdiffuse=false)
         py_w_im = nothing
         py_d_im = nothing
