@@ -180,8 +180,17 @@ function save_fxn(wcol,w,base,date,filt,vers,ccd)
     for i=1:length(wcol)
         if (wcol[i] == "passno") | (wcol[i] == "dnt")
             w[i] = convert.(Int8,w[i])
-        elseif ((wcol[i] == "kcond0") | (wcol[i] == "kcond")) | (wcol[i] == "kpred")
+        elseif (wcol[i] == "kcond0") | (wcol[i] == "kcond") | (wcol[i] == "kpred")
             w[i] = convert.(Int32,w[i])
+        elseif (wcol[i] == "rchi2") | (wcol[i] == "spread_model") | (wcol[i] == "dspread_model")
+            w[i] = convert.(Float32,w[i])
+        elseif wcol[i] == "fdb_tot")
+            for j=1:length(wcol)
+                if wcol[j] == "flux"
+                    w[i].+=w[j]
+                    wcol[i] = "cflux"
+                end
+            end
         end
     end
     f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
