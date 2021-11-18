@@ -20,7 +20,6 @@ import StatsBase
 using Random
 using LinearAlgebra
 import Conda
-import GC
 
 """
     __int__()
