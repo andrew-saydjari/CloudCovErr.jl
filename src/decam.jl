@@ -216,7 +216,7 @@ end
 # combines all of the functions in the repo for
 # an acutal implementation
 
-function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
+function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     println("Started $ccd")
     flush(stdout)
 
@@ -393,6 +393,12 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
     end
 
     if prealloc
+        if ftype == 32
+            T = Float32
+        else
+            T = Float64
+        end
+
         # preallocate the cov and μ per star variables
         cov = zeros(T,Np*Np,Np*Np)
         μ = zeros(T,Np*Np)
