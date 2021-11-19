@@ -301,7 +301,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     stepy = (sy0+2) ÷ tiley
 
     # precallocate the image subblocks
-    GC.gc()
+    GC.gc(false)
     in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
     ism = zeros(T,stepx+2*padx,stepy+2*pady)
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
@@ -410,7 +410,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
     # main loop over ccds
     for ccd in extnames
         proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7,widx=widx,widy=widx,tilex=tilex,tiley=tilex,ftype=ftype)
-        GC.gc()
+        GC.gc(false)
     end
 end
 
