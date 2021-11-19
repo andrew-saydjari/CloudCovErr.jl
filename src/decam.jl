@@ -180,11 +180,11 @@ end
 function save_fxn(wcol,w,base,date,filt,vers,ccd)
     for i=1:length(wcol)
         if (wcol[i] == "passno") | (wcol[i] == "dnt")
-            w[i] = convert.(Int8,w[i])
+            w[i] .= convert.(Int8,w[i])
         elseif (wcol[i] == "kcond0") | (wcol[i] == "kcond") | (wcol[i] == "kpred")
-            w[i] = convert.(Int32,w[i])
+            w[i] .= convert.(Int32,w[i])
         elseif (wcol[i] == "rchi2") | (wcol[i] == "spread_model") | (wcol[i] == "dspread_model")
-            w[i] = convert.(Float32,w[i])
+            w[i] .= convert.(Float32,w[i])
         elseif wcol[i] == "fdb_tot"
             for j=1:length(wcol)
                 if wcol[j] == "flux"
@@ -200,17 +200,14 @@ function save_fxn(wcol,w,base,date,filt,vers,ccd)
 end
 
 function get_catnames(f)
+    nhdu = length(f)
     extnames = String[]
-    i=1
-    for h in f
-        if i==1
-        else
-            extname = read_key(h,"EXTNAME")[1]
-            if last(extname,3) == "CAT"
-                push!(extnames,chop(extname,tail=4))
-            end
+    for i = 1:nhdu-1
+        FITSIO.fits_movabs_hdu(f.fitsfile, i+1)
+        extname = something(FITSIO.fits_try_read_extname(f.fitsfile), "")
+        if last(extname,3) == "CAT"
+            push!(extnames,chop(extname,tail=4))
         end
-        i+=1
     end
     return extnames
 end
@@ -289,12 +286,14 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     (Nstars,) = size(x_stars)
     star_stats = zeros(T,10,Nstars)
 
-    # preallocate the cov and μ per star variables
-    cov = zeros(T,Np*Np,Np*Np)
-    μ = zeros(T,Np*Np)
+    if !prealloc
+        # preallocate the cov and μ per star variables
+        cov = zeros(T,Np*Np,Np*Np)
+        μ = zeros(T,Np*Np)
 
-    # compute a radial mask for reduced num cond pixels
-    circmask = kstar_circle_mask(Np,rlim=256)
+        # compute a radial mask for reduced num cond pixels
+        circmask = kstar_circle_mask(Np,rlim=256)
+    end
 
     # some important global sizes for the loop
     cntStar0 = 0
@@ -302,6 +301,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     stepy = (sy0+2) ÷ tiley
 
     # precallocate the image subblocks
+    GC.gc()
     in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
     ism = zeros(T,stepx+2*padx,stepy+2*pady)
     bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
@@ -339,32 +339,41 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     println("Saved $ccd processing $cntStar0 of $Nstars stars")
     flush(stdout)
     pdefer = count(isnan.(star_stats[1,:]))
-    if pdefer > 0
+    if (pdefer > 0)
         println("There were posDef errors: $pdefer")
         flush(stdout)
     end
 
+    ## manually call out memory as needed to be collected
+    x_stars=nothing
+    y_stars=nothing
+    flux_stars = nothing
+    cx = nothing
+    cy = nothing
+    wcol = nothing
+    w = nothing
+    star_stats = nothing
     return
 end
 
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
+    outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
     println("Starting to process "*infn)
 
     f = FITS(infn)
-    prihdr = read_header(f[1])
     extnames=get_catnames(f)
-    close(f)
-
-    outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
 
     # write output file or read it in and check which ccds are completed
     if ((!resume) | (!isfile(outfn)))
+        prihdr = read_header(f[1])
+        close(f)
         f = FITS(outfn,"w")
         write(f,[0], header=prihdr)
         close(f)
         extnamesdone = String[]
     else
+        close(f)
         f = FITS(outfn,"r+")
         extnamesdone=get_catnames(f)
         close(f)
@@ -381,6 +390,15 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
     if length(ccdlist) != 0
         extnames = intersect(extnames,ccdlist)
         println("Only running unfinished ccds in ccdlist: ", extnames)
+    end
+
+    if prealloc
+        # preallocate the cov and μ per star variables
+        cov = zeros(T,Np*Np,Np*Np)
+        μ = zeros(T,Np*Np)
+
+        # compute a radial mask for reduced num cond pixels
+        circmask = kstar_circle_mask(Np,rlim=256)
     end
 
     # main loop over ccds

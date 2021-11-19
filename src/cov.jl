@@ -88,7 +88,7 @@ function cov_avg!(bimage, ism, bism, in_image; Np::Int=33, widx::Int=129, widy::
                 continue
             end
             # ism = image, shifted and multipled
-            ism .= in_image .* ShiftedArrays.circshift(in_image,(-dr, -dc))
+            @inbounds ism .= in_image .* ShiftedArrays.circshift(in_image,(-dr, -dc))
             fill!(tot,0)
             boxsmooth!(view(bism,:,:,dr+Np,dc+1),ism,tot,widx,widy) # bism = boxcar(ism)
         end
