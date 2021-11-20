@@ -410,7 +410,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
     # main loop over ccds
     for ccd in extnames
         proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7,widx=widx,widy=widx,tilex=tilex,tiley=tilex,ftype=ftype)
-        GC.gc(false)
+        GC.gc()
     end
 end
 

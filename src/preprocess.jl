@@ -166,8 +166,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
     testim[bmaskim] .= 0;
-    bmaskim2 .= copy(bmaskim)
-    testim2 .= copy(testim)
+    bmaskim2 .= bmaskim
+    testim2 .= testim
 
     #hopefully replace with the reflected indexedx arrays
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
