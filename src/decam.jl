@@ -360,7 +360,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         # if doing the ops float64, might want to do a final convert to float32 before saving
         for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
             push!(wcol,col)
-            push!(w,[]])
+            push!(w,[])
         end
         cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
         println("Saved $ccd processing 0 of $Nstars stars")
