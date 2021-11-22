@@ -285,8 +285,8 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
         cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
 
         ## iterate over all star positions and compute errorbars/debiasing corrections
-        star_stats = zeros(T,5,Nstars)
-        star_k = zeros(Int32,5,Nstars)
+        star_stats = zeros(T,10,Nstars)
+        star_k = zeros(Int32,10,Nstars)
 
         if !prealloc
             # preallocate the cov and μ per star variables
