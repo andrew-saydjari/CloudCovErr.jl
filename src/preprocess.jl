@@ -151,7 +151,7 @@ infill values.
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
 """
-function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype::Int=32)
+function prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim,goodpix,ccd;widx=19,widy=19,ftype::Int=32)
     if ftype == 32
         T = Float32
     else
@@ -165,30 +165,38 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
     widyMax = Int(((1.4^10)*widy)÷2)
 
     #the masked entries in testim must be set to 0 so they drop out of the mean
-    testim[bmaskim] .= 0;
-    bmaskim2 .= bmaskim
+    bmaskim .= bmaskd
     testim2 .= testim
 
     #hopefully replace with the reflected indexedx arrays
     in_image = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
-    in_mask = ImageFiltering.padarray(.!bmaskim,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
+    x = findall(bmaskd)
+    in_image[x] .= 0 #eliminates need for third testim copy
+    in_mask = ImageFiltering.padarray(.!bmaskd,ImageFiltering.Pad(:reflect,(widxMax,widyMax)));
+    (sx1, sy1) = size(in_image)
+    tot = zeros(T,sx1)
+    totI = zeros(Int,sx1)
 
     #loop to try masking at larger and larger smoothing to infill large holes
     cnt=0
-    while any(bmaskim2) .& (cnt .< 10)
+    while any(bmaskim) .& (cnt .< 10)
         # this double deep view should be only 1 deep ideally... need the internal unwrap
         @views in_image1 = in_image[(1-Δx):(sx+Δx),(1-Δy):(sy+Δy)]
         @views in_mask1 = in_mask[(1-Δx):(sx+Δx),(1-Δy):(sy+Δy)]
-        (sx1, sy1) = size(in_image1)
-        tot = zeros(T,sx1)
-        totI = zeros(Int,sx1)
+        fill!(tot,0)
+        fill!(totI,0)
         boxsmooth!(bimage,in_image1,tot,widx,widy)
         boxsmooth!(bimageI,in_mask1,totI,widx,widy)
 
         goodpix .= (bimageI .> 10)
+        goodpix .&= bmaskim
 
-        testim2[bmaskim2 .& goodpix] .= (bimage./bimageI)[bmaskim2 .& goodpix]
-        bmaskim2[goodpix] .= false
+        x = findall(goodpix)
+
+        @simd for i in x
+            @inbounds testim2[i] = bimage[i]/bimageI[i]
+            @inbounds bmaskim[i] = false
+        end
 
         # update loop params
         cnt+=1
@@ -204,7 +212,8 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
 
     #catastrophic failure fallback
     if cnt == 10
-        testim2[bmaskim2] .= StatsBase.median(testim)
+        x = findall(goodpix)
+        testim2[x] .= StatsBase.median(testim)
         println("Infilling Failed Badly")
         flush(stdout)
     end

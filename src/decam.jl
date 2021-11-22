@@ -85,16 +85,17 @@ ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1",
 """
 function read_decam(base,date,filt,vers,ccd; corrects7=true)
     ifn = base*date*"_ooi_"*filt*"_"*vers*".fits.fz"
+    wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
     dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"
     if last(ccd,1) == "I"
         ifn = inject_rename(ifn)
+        wfn = inject_rename(wfn)
         dfn = inject_rename(dfn)
     end
     if corrects7 .& ((ccd == "S7") .| (ccd == "S7I"))
         # a little wasteful to throw away load times in python for w_im and d_im
         # but we need the crowdsource formatting for s7 correction and it is easiest
         # to keep the disCovErr formatting consistent
-        wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
         py_ref_im, py_w_im, py_d_im, nebprob = py"read_data"(ifn,wfn,dfn,ccd,maskdiffuse=false)
         py_w_im = nothing
         py_d_im = nothing
@@ -130,8 +131,8 @@ the gain from DECam is likely sufficient).
 - `vers`: NOAO community processing version number
 - `ccd`: which ccd we are pulling the image for
 """
-function read_crowdsource(base,date,filt,vers,ccd)
-    f = FITS(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
+function read_crowdsource(basecat,date,filt,vers,ccd)
+    f = FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
     x_stars = read(f[ccd*"_CAT"],"x")
     y_stars = read(f[ccd*"_CAT"],"y")
     flux_stars = read(f[ccd*"_CAT"],"flux")
@@ -145,7 +146,7 @@ function read_crowdsource(base,date,filt,vers,ccd)
     end
     close(f)
 
-    f = FITS(base*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
+    f = FITS(basecat*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
     mod_im = read(f[ccd*"_MOD"])
     sky_im = read(f[ccd*"_SKY"])
     close(f)
@@ -177,7 +178,7 @@ function load_psfmodel_cs(base,date,filt,vers,ccd)
     return psfmodel_jl
 end
 
-function save_fxn(wcol,w,base,date,filt,vers,ccd)
+function save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     for i=1:length(wcol)
         if (wcol[i] == "passno") | (wcol[i] == "dnt")
             w[i] .= convert.(Int8,w[i])
@@ -194,7 +195,7 @@ function save_fxn(wcol,w,base,date,filt,vers,ccd)
             end
         end
     end
-    f = FITS(base*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
+    f = FITS(basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits","r+")
     write(f,wcol,w,name=ccd*"_CAT")
     close(f)
 end
@@ -232,127 +233,139 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     d_im = nothing
     (sx0, sy0) = size(ref_im)
     x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = cloudCovErr.read_crowdsource(basecat,date,filt,vers,ccd)
-
-    psfmodel = cloudCovErr.load_psfmodel_cs(basecat,date,filt,vers,ccd)
-    psfstatic511 = psfmodel(sx0÷2,sy0÷2,511)
-    psfstatic33 = psfmodel(sx0÷2,sy0÷2,Np)
-
-    # mask bad camera pixels/cosmic rays, then mask out star centers
-    cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
-
-    testim = copy(mod_im .- ref_im)
-    bimage = zeros(T,sx0,sy0)
-    bimageI = zeros(Int64,sx0,sy0)
-    testim2 = zeros(T,sx0,sy0)
-    bmaskim2 = zeros(Bool,sx0,sy0)
-    goodpix = zeros(Bool,sx0,sy0)
-
-    prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
-    testim = copy(mod_im .- ref_im) ##FIXME should not be overwritten
-    ref_im = nothing
-    bimage = nothing
-    bimageI = nothing
-    bmaskim2 = nothing
-    goodpix = nothing
-
-    ## calculate the star farthest outside the edge of the image in x and y
-    cx = round.(Int,x_stars)
-    cy = round.(Int,y_stars)
-    px0 = outest_bounds(cx,sx0)
-    py0 = outest_bounds(cy,sy0)
-
-    ## these have to be allocating to get the noise model right
-    Δx = (widx-1)÷2
-    Δy = (widy-1)÷2
-    padx = Np+Δx+px0
-    pady = Np+Δy+py0
-    in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    testim2 = nothing
-    in_image_raw = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    testim = nothing
-    in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    in_stars_im = ImageFiltering.padarray(abs.(mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
-    sky_im = nothing
-    mod_im = nothing
-    in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Fill(true,(padx+2,pady+2)));
-    bmaskd = nothing
-
-    # exposure datetime based seed
-    rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
-    cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
-    in_sky_im = nothing
-
-    ## iterate over all star positions and compute errorbars/debiasing corrections
     (Nstars,) = size(x_stars)
-    star_stats = zeros(T,10,Nstars)
 
-    if !prealloc
-        # preallocate the cov and μ per star variables
-        cov = zeros(T,Np*Np,Np*Np)
-        μ = zeros(T,Np*Np)
+    if Nstars > 0
+        psfmodel = cloudCovErr.load_psfmodel_cs(basecat,date,filt,vers,ccd)
+        psfstatic511 = psfmodel(sx0÷2,sy0÷2,511)
+        psfstatic33 = psfmodel(sx0÷2,sy0÷2,Np)
 
-        # compute a radial mask for reduced num cond pixels
-        circmask = kstar_circle_mask(Np,rlim=256)
-    end
+        # mask bad camera pixels/cosmic rays, then mask out star centers
+        cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
-    # some important global sizes for the loop
-    cntStar0 = 0
-    stepx = (sx0+2) ÷ tilex
-    stepy = (sy0+2) ÷ tiley
+        if !prealloc
+            testim = mod_im .- ref_im
+            bimage = zeros(T,sx0,sy0)
+            bimageI = zeros(Int64,sx0,sy0)
+            testim2 = zeros(T,sx0,sy0)
+            bmaskim2 = zeros(Bool,sx0,sy0)
+            goodpix = zeros(Bool,sx0,sy0)
+        else
+            # I might need some fill zeros here
+            testim .= mod_im .- ref_im
+            fill!(goodpix,false)
+        end
 
-    # precallocate the image subblocks
-    #GC.gc(false)
-    in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
-    ism = zeros(T,stepx+2*padx,stepy+2*pady)
-    bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
-    bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
-    for jx=1:tilex, jy=1:tiley
-        xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
-        cntStar = length(star_ind)
-        if cntStar > 0
-            in_subimage .= in_image[xrng,yrng]
-            cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
-            offx = padx-Δx-(jx-1)*stepx
-            offy = pady-Δy-(jy-1)*stepy
-            for i in star_ind
-                build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
-                data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
-                psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
-                try
-                    star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,diag_on=true)[1]..., kcond0, kcond, kpred, dnt]
-                catch
-                    star_stats[:,i] .= [NaN, NaN, NaN, NaN, NaN, NaN, kcond0, kcond, kpred, dnt]
+        prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
+        ref_im = nothing
+        bimage = nothing
+        bimageI = nothing
+        bmaskim2 = nothing
+        goodpix = nothing
+
+        ## calculate the star farthest outside the edge of the image in x and y
+        cx = round.(Int,x_stars)
+        cy = round.(Int,y_stars)
+        px0 = outest_bounds(cx,sx0)
+        py0 = outest_bounds(cy,sy0)
+
+        ## these have to be allocating to get the noise model right
+        Δx = (widx-1)÷2
+        Δy = (widy-1)÷2
+        padx = Np+Δx+px0
+        pady = Np+Δy+py0
+        in_image = ImageFiltering.padarray(testim2,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+        in_image_raw = ImageFiltering.padarray(testim,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+        in_sky_im = ImageFiltering.padarray(sky_im,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+        in_stars_im = ImageFiltering.padarray(abs.(mod_im.-sky_im)./gain,ImageFiltering.Pad(:reflect,(padx+2,pady+2)));
+        in_bmaskd = ImageFiltering.padarray(bmaskd,ImageFiltering.Fill(true,(padx+2,pady+2)));
+
+        # exposure datetime based seed
+        rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
+        cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
+
+        ## iterate over all star positions and compute errorbars/debiasing corrections
+        star_stats = zeros(T,5,Nstars)
+        star_k = zeros(Int32,5,Nstars)
+
+        if !prealloc
+            # preallocate the cov and μ per star variables
+            cov = zeros(T,Np*Np,Np*Np)
+            μ = zeros(T,Np*Np)
+
+            # compute a radial mask for reduced num cond pixels
+            circmask = kstar_circle_mask(Np,rlim=256)
+        end
+
+        # some important global sizes for the loop
+        cntStar0 = 0
+        stepx = (sx0+2) ÷ tilex
+        stepy = (sy0+2) ÷ tiley
+
+        # precallocate the image subblocks
+        #GC.gc(false)
+        in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
+        ism = zeros(T,stepx+2*padx,stepy+2*pady)
+        bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
+        bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
+        for jx=1:tilex, jy=1:tiley
+            xrng, yrng, star_ind = im_subrng(jx,jy,cx,cy,sx0+2,sy0+2,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
+            cntStar = length(star_ind)
+            if cntStar > 0
+                in_subimage .= in_image[xrng,yrng]
+                cov_avg!(bimage, ism, bism, in_subimage, widx=widx, widy=widy)
+                offx = padx-Δx-(jx-1)*stepx
+                offy = pady-Δy-(jy-1)*stepy
+                for i in star_ind
+                    build_cov!(cov,μ,cx[i]+offx,cy[i]+offy,bimage,bism,Np,widx,widy)
+                    data_in, stars_in, kmasked2d = stamp_cutter(cx[i],cy[i],in_image_raw,in_stars_im,in_bmaskd;Np=Np)
+                    psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel,circmask,x_stars[i],y_stars[i],flux_stars[i];Np=Np,thr=thr)
+                    try
+                        star_stats[:,i] .= [condCovEst_wdiag(cov,μ,kstar,kpsf2d,data_in,stars_in,psft,diag_on=true)[1]..., kcond0, kcond, kpred, dnt]
+                    catch
+                        star_stats[:,i] .= [NaN, NaN, NaN, NaN, NaN, NaN, kcond0, kcond, kpred, dnt]
+                    end
                 end
             end
+            cntStar0 += cntStar
+            println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
+            flush(stdout)
         end
-        cntStar0 += cntStar
-        println("Finished $cntStar stars in tile ($jx, $jy) of $ccd")
+        # prepare for export by appending to cat vectors
+        # if doing the ops float64, might want to do a final convert to float32 before saving
+        for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
+            push!(wcol,col)
+            push!(w,star_stats[ind,:])
+        end
+        cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+        println("Saved $ccd processing $cntStar0 of $Nstars stars")
         flush(stdout)
-    end
-    # prepare for export by appending to cat vectors
-    # if doing the ops float64, might want to do a final convert to float32 before saving
-    for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
-        push!(wcol,col)
-        push!(w,star_stats[ind,:])
-    end
-    cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
-    println("Saved $ccd processing $cntStar0 of $Nstars stars")
-    flush(stdout)
-    pdefer = count(isnan.(star_stats[1,:]))
-    if (pdefer > 0)
-        println("There were posDef errors: $pdefer")
-        flush(stdout)
-    end
+        pdefer = count(isnan.(star_stats[1,:]))
+        if (pdefer > 0)
+            println("There were posDef errors: $pdefer")
+            flush(stdout)
+        end
 
-    ## manually call out memory as needed to be collected
-    x_stars=nothing
-    y_stars=nothing
-    flux_stars = nothing
-    cx = nothing
-    cy = nothing
-    wcol = nothing
-    w = nothing
-    star_stats = nothing
+        ## manually call out memory as needed to be collected
+        x_stars=nothing
+        y_stars=nothing
+        flux_stars = nothing
+        cx = nothing
+        cy = nothing
+        wcol = nothing
+        w = nothing
+        star_stats = nothing
+    else
+        # prepare for export by appending to cat vectors
+        # if doing the ops float64, might want to do a final convert to float32 before saving
+        for (ind,col) in enumerate(["dcflux","dcflux_diag","fdb_tot","fdb_res","fdb_pred","cchi2","kcond0","kcond","kpred","dnt"])
+            push!(wcol,col)
+            push!(w,[]])
+        end
+        cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+        println("Saved $ccd processing 0 of $Nstars stars")
+        flush(stdout)
+    end
     return
 end
 
@@ -398,6 +411,13 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
         else
             T = Float64
         end
+
+        testim = zeros(T,sx0,sy0)
+        bimage = zeros(T,sx0,sy0)
+        bimageI = zeros(Int64,sx0,sy0)
+        testim2 = zeros(T,sx0,sy0)
+        bmaskim2 = zeros(Bool,sx0,sy0)
+        goodpix = zeros(Bool,sx0,sy0)
 
         # preallocate the cov and μ per star variables
         cov = zeros(T,Np*Np,Np*Np)
