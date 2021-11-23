@@ -46,12 +46,12 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
 
     dnt = 0
     if kcond0 < 4*Np
-        dnt = 1
+        dnt += 1
         kstar = (kmasked2d .| kpsf2d)
     end
 
     if kcond0 < 4*Np #this is about a 10% cut, and is the sum of bndry
-        dnt = 2
+        dnt += 2
         kstar[1,:] .= 0
         kstar[end,:] .= 0
         kstar[:,1] .= 0
@@ -61,6 +61,18 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
         kpsf2d[end,:] .= 0
         kpsf2d[:,1] .= 0
         kpsf2d[:,end] .= 0
+    end
+
+    psfr = minimum(psft)/maximum(psft)
+    if psfr < 0
+        dnt += 8
+        psft .= abs.(psft)
+    end
+    if psfr < -1e-3
+        dnt += 16
+    end
+    if psfr < -1e-1
+        dnt += 32
     end
 
     kpred = count(kpsf2d)
