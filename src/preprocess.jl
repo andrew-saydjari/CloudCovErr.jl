@@ -151,7 +151,7 @@ infill values.
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
 """
-function prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim,goodpix,ccd;widx=19,widy=19,ftype::Int=32,widmult=1.4)
+function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype::Int=32,widmult=1.4)
     if ftype == 32
         T = Float32
     else
