@@ -228,7 +228,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     end
 
     # loads from disk
-    ref_im, d_im = CloudCovErr.read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
+    ref_im, d_im = cloudCovErr.read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     bmaskd = (d_im .!= 0)
     d_im = nothing
     (sx0, sy0) = size(ref_im)
@@ -255,7 +255,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             testim .= mod_im .- ref_im
             fill!(goodpix,false)
         end
-        
+
         bmaskd .|= (abs.(testim) .> 20000)
         prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
         testim .= mod_im .- ref_im #fixes current overwrite for 0 infilling
