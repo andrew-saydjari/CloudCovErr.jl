@@ -146,6 +146,11 @@ function read_crowdsource(basecat,date,filt,vers,ccd)
     end
     close(f)
 
+    if gain < 0
+        println("WARNING: Gain is negative! Do not trust the input from this exposure!")
+        gain = abs(gain)
+    end
+
     f = FITS(basecat*"mod/c4d_"*date*"_ooi_"*filt*"_"*vers*".mod.fits")
     mod_im = read(f[ccd*"_MOD"])
     sky_im = read(f[ccd*"_SKY"])

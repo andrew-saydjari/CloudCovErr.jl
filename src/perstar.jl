@@ -50,6 +50,8 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
         kstar = (kmasked2d .| kpsf2d)
     end
 
+    #change so these are decoupled
+
     if kcond0 < 4*Np #this is about a 10% cut, and is the sum of bndry
         dnt += 2
         kstar[1,:] .= 0
