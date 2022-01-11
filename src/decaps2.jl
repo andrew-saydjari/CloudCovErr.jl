@@ -35,6 +35,10 @@ function parse_commandline()
             help = "threshold for psf-based masking of the residuals (int for ease)"
             arg_type = Int
             default = 20
+        "--outthr"
+            help = "threshold for residual-based masking (int for ease)"
+            arg_type = Int
+            default = 20000
         "--Np", "-p"
             help = "sidelength size of spatial covariance matrix (must be int, odd)"
             arg_type = Int
@@ -92,7 +96,8 @@ function run_wrapper()
 
     cloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"],
-        thr=parg["thr"],Np=parg["Np"],widx=parg["wx"],widy=wy,tilex=parg["tilex"],tiley=tiley,ftype=parg["ftype"])
+        thr=parg["thr"],outthr=parg["outthr"],Np=parg["Np"],widx=parg["wx"],widy=wy,tilex=parg["tilex"],
+        tiley=tiley,ftype=parg["ftype"])
 end
 
 run_wrapper()

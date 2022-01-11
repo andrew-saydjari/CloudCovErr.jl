@@ -222,7 +222,7 @@ end
 # combines all of the functions in the repo for
 # an acutal implementation
 
-function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     println("Started $ccd")
     flush(stdout)
 
@@ -261,7 +261,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
             fill!(goodpix,false)
         end
 
-        bmaskd .|= (abs.(testim) .> 20000)
+        bmaskd .|= (abs.(testim) .> outthr)
         prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
         testim .= mod_im .- ref_im #fixes current overwrite for 0 infilling
         ref_im = nothing
@@ -376,7 +376,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,Np=33,corrects7=true,wi
     return
 end
 
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
     println("Starting to process "*infn)
@@ -436,7 +436,7 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
 
     # main loop over ccds
     for ccd in extnames
-        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,Np=Np,corrects7=corrects7,widx=widx,widy=widx,tilex=tilex,tiley=tilex,ftype=ftype)
+        proc_ccd(base,date,filt,vers,basecat,ccd;thr=thr,outthr=outthr,Np=Np,corrects7=corrects7,widx=widx,widy=widx,tilex=tilex,tiley=tilex,ftype=ftype)
         GC.gc()
     end
 end
