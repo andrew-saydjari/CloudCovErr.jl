@@ -74,6 +74,23 @@ function boxsmooth!(out::AbstractArray, arr::AbstractArray, tot::Array{T,1}, wid
     end
 end
 
+"""
+    cov_avg!(bimage, ism, bism, in_image; Np::Int=33, widx::Int=129, widy::Int=129, ftype::Int=32)
+
+Key function for constructing the (shifted and multiplied) versions of the input image used to quickly
+estimate the local covariance matrix at a large number of locations. The main output is in the preallocated
+`bism` which is used as an input to `build_cov!`.
+
+# Arguments:
+- `bimage`: preallocated output array for the boxcar smoothed unshifted image
+- `ism`: preallocated intermediate array for the input image times itself shifted
+- `bism`: preallocated output array to store boxcar-smoothed image products for all shifts
+- `in_image`: input image the local covariance of which we want to estimate
+- `Np::Int`: size of local covariance matrix in pixels (default 33)
+- `widx::Int`: width of boxcar window in x which determines size of region used for samples for the local covariance estimate (default 129)
+- `widy::Int`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate (default 129)
+- `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
+"""
 function cov_avg!(bimage, ism, bism, in_image; Np::Int=33, widx::Int=129, widy::Int=129, ftype::Int=32)
     if ftype == 32
         T = Float32
