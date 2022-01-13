@@ -7,8 +7,15 @@ export cov_avg!
 export boxsmooth!
 export outest_bounds
 
-#consider adding back per-star functionality for other users... 
+"""
+    outest_bounds(cx,sx)
 
+Helper function to find maximum padding required to accomodate all query points `cx` outside of the image size 1:`sx`.
+
+# Arguments:
+- `cx`: list of integer star centers (in either x or y)
+- `sx`: image dimension along the axis indexed by `cx`
+"""
 function outest_bounds(cx,sx)
     px0 = 0
     sortcx = sort(cx)
