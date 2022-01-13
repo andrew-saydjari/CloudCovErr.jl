@@ -28,15 +28,15 @@ Builds the required python crowdsource dependency and exports the required load
 function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
-    # if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
-    #     Conda.add("nomkl",channel="conda-forge")
-    #     Conda.add("crowdsourcephoto",channel="conda-forge")
-    # end
+    if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        #Conda.add("nomkl",channel="conda-forge")
+        Conda.add("crowdsourcephoto",channel="conda-forge")
+    end
     py"""
     import sys
-    sys.path.append('/n/home12/saydjari/finksage/ExtSoftware/crowdsource_new/crowdsource')
-    import psf as psfmod
-    from decam_proc import read_data
+    #sys.path.append('/n/home12/saydjari/finksage/ExtSoftware/crowdsource_new/crowdsource')
+    import crowdsource.psf as psfmod
+    from crowdsource.decam_proc import read_data
     from astropy.io import fits
     from functools import partial
     import os
