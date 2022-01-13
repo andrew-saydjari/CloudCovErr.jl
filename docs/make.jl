@@ -4,7 +4,7 @@ using Documenter
 makedocs(
     clean=true,
     highlightsig = true,
-    sitename= "cloudCovErr",
+    sitename= "cloudCovErr.jl",
 )
 
 deploydocs(

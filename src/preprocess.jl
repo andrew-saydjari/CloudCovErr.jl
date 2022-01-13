@@ -13,6 +13,20 @@ export findmaxpsf
 export kstar_circle_mask
 export im_subrng
 
+"""
+    kstar_circle_mask(Np;rlim=256) -> circmask
+
+Generates a Bool mask for pixels beyond a given (squared) radius of the center of an image.
+
+# Arguments:
+- `Np`: size of image stamp
+
+# Keywords:
+- `rlim`: squared radius (in pixels^2) beyond which pixels should be masked (default 256)
+
+# Output:
+- `circmask`: static Bool mask used for assigning pixels beyond some radius of the stellar center as "ignored"
+"""
 function kstar_circle_mask(Np;rlim=256)
     halfNp = (Np-1) ÷ 2
     x = (-halfNp:halfNp)' .* ones(Int,Np)
@@ -21,10 +35,52 @@ function kstar_circle_mask(Np;rlim=256)
     return R.>rlim
 end
 
+"""
+    findmaxpsf(psfstamp1;thr=20) -> flim
+
+Computes the flux a star must have so that the PSF-based masking using `thr`
+would require a larger stamp area. Used for computational savings.
+
+# Arguments:
+- `psfstamp1`: a small image of a representative PSF
+
+# Keywords:
+- `thr`: threshold used to determine which pixels are bright enough to be "hidden"
+
+# Output:
+- `flim`: maximum flux that can be masked by `thr` without exceeding the PSF stamp footprint
+"""
 function findmaxpsf(psfstamp1;thr=20)
     thr/maximum([psfstamp1[:,1]...,psfstamp1[1,:]...,psfstamp1[:,end]...,psfstamp1[end,:]...])
 end
 
+"""
+    im_subrng(jx,jy,cx,cy,sx,sy,px0,py0,stepx,stepy,padx,pady,tilex,tiley) -> xrng, yrng, star_ind
+
+Computes the flux a star must have so that the PSF-based masking using `thr`
+would require a larger stamp area. Used for computational savings.
+
+# Arguments:
+- `jx`: tile index along x
+- `jy`: tile index along y
+- `cx`: list of stellar x-coordinates
+- `cy`: list of stellar y-coordinates
+- `sx`: size of original image in x
+- `sy`: size of original image in y
+- `px0`: maximal padding in x to account for stars outside image
+- `py0`: maximal padding in y to account for stars outside image
+- `stepx`: tiling step size in x
+- `stepy`: tiling step size in y
+- `padx`: tile padding in x required to account for local stamp size, sample size, and pixels outside the image
+- `pady`: tile padding in x required to account for local stamp size, sample size, and pixels outside the image
+- `tilex`: total number of tile divisions along x
+- `tiley`: total number of tile divisions along y
+
+# Output:
+- `xrng`: slicing range of the tile in x
+- `yrng`: slicing range of the tile in y
+- `star_ind`: Bool mask of all stars falling within the tile (subimage)
+"""
 function im_subrng(jx,jy,cx,cy,sx,sy,px0,py0,stepx,stepy,padx,pady,tilex,tiley)
     lowbx = (1 + (jx-1)*stepx)
     uppbx = (1 + jx*stepx-1)
@@ -74,7 +130,9 @@ of making a mask.
 - `x_stars`: list of source x positions
 - `y_stars`: list of source y positions
 - `flux_stars`: list of source fluxes
-- `thr`: threshold used for flux-dependent masking
+
+# Keywords:
+- `thr`: threshold used for flux-dependent masking (default 20)
 """
 function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr=20)
     (sx, sy) = size(bmaskd)
@@ -92,6 +150,27 @@ function gen_mask_staticPSF!(bmaskd, psfstamp, x_stars, y_stars, flux_stars; thr
     end
 end
 
+"""
+    gen_mask_staticPSF2!(maskd, psfstamp, psfstamp1, x_stars, y_stars, flux_stars, thr=20)
+
+Generate a mask for an input image (which is usually an image of model residuals)
+that excludes the cores of stars (which are often mismodeled). In this function,
+we use a small fixed PSF `psfstamp1` for all faint sources, and adjust the masking
+fraction based on the stellar flux and a threshold `thr`. Only for source bright
+enough to need a larger PSF stamp do we use `psfstamp`, which saves some computational
+cost.
+
+# Arguments:
+- `maskd`: bool image to which mask will be added (bitwise or)
+- `psfstamp`: simple 2D array of a single PSF to be used for bright stars in the whole image
+- `psfstamp1`: simple 2D array of a single PSF to be used for faint stars in the whole image
+- `x_stars`: list of source x positions
+- `y_stars`: list of source y positions
+- `flux_stars`: list of source fluxes
+
+# Keywords:
+- `thr`: threshold used for flux-dependent masking (default 20)
+"""
 function gen_mask_staticPSF2!(bmaskd, psfstamp, psfstamp1, x_stars, y_stars, flux_stars; thr=20)
     (sx, sy) = size(bmaskd)
     (psx, psy) = size(psfstamp)

@@ -8,13 +8,16 @@ export boxsmooth!
 export outest_bounds
 
 """
-    outest_bounds(cx,sx)
+    outest_bounds(cx,sx) -> px0
 
-Helper function to find maximum padding required to accomodate all query points `cx` outside of the image size 1:`sx`.
+Helper function to find maximum padding in pixels required to accomodate all query points `cx` outside of the image size 1:`sx`.
 
 # Arguments:
 - `cx`: list of integer star centers (in either x or y)
 - `sx`: image dimension along the axis indexed by `cx`
+
+# Output:
+- `px0`: maximum padding in pixels required to accomodate all query points
 """
 function outest_bounds(cx,sx)
     px0 = 0
@@ -31,18 +34,17 @@ function outest_bounds(cx,sx)
 end
 
 """
-    boxsmooth!(out, arr, widx::Int, widy::Int, sx::Int, sy::Int)
+    boxsmooth!(out::AbstractArray, arr::AbstractArray, tot::Array{T,1}, widx::Int, widy::Int)
 
 Boxcar smooths an input image (or paddedview) `arr` with window size `widx` by
 `widy`. We pass the original image size `sx` and `sy` to help handle image views.
 
 # Arguments:
-- `out`: preallocated output array for the boxcar smoothed image
-- `arr`: input array for which boxcar smoothing is computed (generally paddedview)
+- `out::AbstractArray`: preallocated output array for the boxcar smoothed image
+- `arr::AbstractArray`: input array for which boxcar smoothing is computed (generally paddedview)
+- `tot::Array{T,1}`: preallocated array to hold moving sums along 1 dimension
 - `widx::Int`: size of boxcar smoothing window in x
 - `widy::Int`: size of boxcar smoothing window in y
-- `sx::Int`: x size of the original (unpadded) image
-- `sy::Int`: y size of the original (unpadded) image
 """
 function boxsmooth!(out::AbstractArray, arr::AbstractArray, tot::Array{T,1}, widx::Int, widy::Int) where T
     (sx, sy) = size(arr)
@@ -86,6 +88,8 @@ estimate the local covariance matrix at a large number of locations. The main ou
 - `ism`: preallocated intermediate array for the input image times itself shifted
 - `bism`: preallocated output array to store boxcar-smoothed image products for all shifts
 - `in_image`: input image the local covariance of which we want to estimate
+
+# Keywords:
 - `Np::Int`: size of local covariance matrix in pixels (default 33)
 - `widx::Int`: width of boxcar window in x which determines size of region used for samples for the local covariance estimate (default 129)
 - `widy::Int`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate (default 129)

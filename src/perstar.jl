@@ -6,20 +6,25 @@ export condCovEst_wdiag
 export build_cov!
 
 """
-    stamp_cutter(cxx,cyy,residimIn,w_im,mod_im,skyim,maskim;Np=33) -> data_in, data_w, stars_in, kmasked2d
+    stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33) -> data_in, stars_in, kmasked2d
 
 Cuts out local stamps around each star of the various input images to be used for
 per star statistics calculations.
 
 # Arguments:
-- `cxx`: center coorindate x of the stamp
-- `cyy`: center coorindate y of the stamp
+- `cx`: center coorindate x of the stamp
+- `cy`: center coorindate y of the stamp
 - `residimIn`: residual image with infilling from which covariance was estimated
-- `w_im`: input weight image
-- `mod_im`: input model image
-- `skyim`: input image of sky background
-- `maskim`: input image of masked pixels
-- `Np`: size of covariance matrix footprint around each star
+- `star_im`: input image of model of stars only. abs(mod_im-sky_im)
+- `maskim`: input image of upstream masked pixels
+
+# Keywords:
+- `Np`: size of covariance matrix footprint around each star (default 33)
+
+# Output:
+- `data_in`: local stamp of the (non-infilled) residual image
+- `stars_in`: local stamp of model of stars only
+- `kmasked2d`: local stamp of upstream masked pixels
 """
 function stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33)
     radNp = (Np-1)÷2
@@ -31,6 +36,39 @@ function stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33)
     return data_in, stars_in, kmasked2d
 end
 
+"""
+    gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,thr=20) -> psft, kstar[:], kpsf2d, kcond0, kcond, kpred, dnt
+
+Assigns pixels in the local subimage around a star to either be "good", "hidden", or "ignored"
+based on user settings and the flux of the star. Reads in masked pixels from the quality
+flags on pixels coming from the community pipeline `kmasked2d`, a PSF model for the star,
+and a precomputed circular mask `circmask` to exclude pixels at a large radius from the
+stellar center since they have little impact on the regression of hidden pixels. The pixels
+assigned as "hidden" and to be interpolated are determined by a `thr` on the pixel values
+for `flux_star` times the PSF model. We use a parametric PSFs that varies with position and
+query the PSF at the stellar position for each star.
+
+# Arguments:
+- `kmasked2d`: Bool mask from upstream pixel quality flags to assign pixels as "ignored"
+- `psfmodel`: parametric PSF model that can be queried at different positions
+- `circmask`: static Bool mask assigning pixels beyond some radius of the stellar center as "ignored"
+- `x_star`: x-coordinate of the star (used only for flexible PSF model query)
+- `y_star`: y-coordinate of the star (used only for flexible PSF model query)
+- `flux_star`: flux of star in ADU to determine how large a region to make "hidden"
+
+# Keywords:
+- `Np`: size of local covariance matrix in pixels (default 33)
+- `thr`: threshold for psf-based masking of the residuals (larger more "hidden")
+
+# Output:
+- `psft`: static array (image) of the stellar PSF
+- `kstar`: Boolean indexes the NOT "good" pixels
+- `kpsf2d`: Boolean indexes the "hidden" pixels
+- `kcond0`: initial number of "good" pixels
+- `kcond`: final number of "good" pixels after fallbacks
+- `kpred`: the number of pixels "hidden"
+- `dnt`: quality flag bits on the solution
+"""
 function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,thr=20)
 
     psft = psfmodel(x_star,y_star,Np)
@@ -50,9 +88,9 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
         kstar = (kmasked2d .| kpsf2d)
     end
 
-    #change so these are decoupled
+    kcond = Np^2-count(kstar)
 
-    if kcond0 < 4*Np #this is about a 10% cut, and is the sum of bndry
+    if kcond < 4*Np #this is about a 10% cut, and is the sum of bndry
         dnt += 2
         kstar[1,:] .= 0
         kstar[end,:] .= 0
@@ -84,27 +122,42 @@ function gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,
 end
 
 """
-    condCovEst_wdiag(cov_loc,μ,k,kstar,kpsf2d,data_in,data_w,stars_in) -> [std_w std_wdiag var_wdb resid_mean pred_mean chi20]
+    condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0,diag_on=true) -> out
 
-Using a local covariance matrix estimate `cov_loc` and a set of known pixels `k`
-and unknown pixels `kstar`, this function computes a prediction for the mean value
-of the `kstar` pixels and the covariance matrix of the `kstar` pixels. In terms of
+Using a local covariance matrix estimate `cov_loc` and a set of known ("good") pixels `km`
+and "hidden" pixels `kpsf2d`, this function computes a prediction for the mean value
+of the `kpsf2d` pixels and the covariance matrix of the `kpsf2d` pixels. In terms of
 statistics use to adjust the photometry of a star, we are only interested in the
-pixels masked as a result of the star (i.e. not a detector defect or cosmic ray nearby)
-which is `kpsf2d`. The residual image `data_in`, the weight image `data_w`, and a model of the counts
-above the background coming from the star `stars_in` for the local patch are also
-inputs of the function. Correction factors for the photometric flux and flux
-uncertainities are outputs as well as the chi2 value for the predicted pixels.
+pixels masked as a result of the star (i.e. not a detector defect or cosmic ray nearby).
+The residual image `data_in` and a model of the counts above the background coming from the
+star `stars_in` for the local patch are also inputs of the function. Correction factors for
+the photometric flux and flux uncertainities are outputs as well as a chi2 value for the
+"good" pixels. The output list can conditionally include the mean reconstruction and
+draws from the distribution of reconstructions.
 
 # Arguments:
 - `cov_loc`: local covariance matrix
 - `μ`: vector containing mean value for each pixel in the patch
-- `k`: unmasked pixels
-- `kstar`: masked pixels
+- `km`: unmasked pixels
 - `kpsf2d`: pixels masked due to the star of interest
-- `data_in`: residual image in local patch
-- `data_w`: weight image in local patch
-- `stars_in`: image of counts from star alone in local patch
+- `data_in`: (non-infilled) residual image in local patch
+- `psft`: static array (image) of the stellar PSF
+
+# Keywords:
+- `Np`: size of local covariance matrix in pixels (default 33)
+- `export_mean`: when true, returns the mean conditional prediction for the "hidden" pixels (default false)
+- `n_draw`: when nonzero, returns that number of realizations of the conditional infilling (default 0)
+- `diag_on`: flag for adding to the pixelwise uncertainty based on the photoelectron counts of the modeled star (default true)
+
+# Output:
+- `out[1]`: flux uncertainity of the star
+- `out[2]`: flux uncertainity of the star assuming the covariance matrix were diagonal
+- `out[3]`: flux correction which must be added to correct the input flux estimate
+- `out[4]`: flux correction coming from the residuals (fdb_res)
+- `out[5]`: flux correction coming from the predicted background (fdb_pred)
+- `out[6]`: chi2 for the "good" pixels under `cov_loc` as a metric on how good our assumptions are
+- `out[7]`: local region (image) with "hidden" pixels replaced by the mean conditional estimate (optional output)
+- `out[end:end+n_draw]`: local region (image) with "hidden" pixels replaced by the draws from the conditional distribution (optional output)
 """
 function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0,diag_on=true)
     k = .!km
@@ -165,6 +218,27 @@ function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,expor
     return out
 end
 
+"""
+    build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array{T,2},bism::Array{T,4},Np::Int,widx::Int,widy::Int) where T <:Union{Float32,Float64}
+
+Constructs the local covariance matrix and mean for an image patch of size `Np` x `Np` pixels around a location
+of interest (`cx`,`cy`). The construction is just a lookup of pixel values from the stored boxcar-smoothed copies
+of the input image times itself shifted in `bism`. Passing the smoothed image `bimage` and the widths of the boxcar
+mean `widx` and `widy` is helpful for the mean and normalization. The covariance and mean are updated in place
+for speed since this operation may be performed billions of times since we construct a new covariance matrix for
+every detection. Math may either be performed `Float32` or `Float64`.
+
+# Arguments:
+- `cov::Array{T,2}`: preallocated output array for local covariance matrix
+- `μ::Array{T,1}`: preallocated output vector for local mean
+- `cx::Int`: x-coordinate of the center of the local region
+- `cy::Int`: y-coordinate of the center of the local region
+- `bimage::Array{T,2}`: boxcar smoothed unshifted image
+- `bism::Array{T,4}`: boxcar-smoothed image products for all shifts
+- `Np::Int`: size of local covariance matrix in pixels
+- `widx::Int`: width of boxcar window in x which determines size of region used for samples for the local covariance estimate
+- `widy::Int`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate
+"""
 function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array{T,2},bism::Array{T,4},Np::Int,widx::Int,widy::Int) where T <:Union{Float32,Float64}
     Δx = (widx-1)÷2
     Δy = (widy-1)÷2

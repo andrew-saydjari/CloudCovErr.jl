@@ -6,6 +6,12 @@ push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/cloudCovErr.jl/src/")
 using cloudCovErr
 using ArgParse
 
+"""
+    parse_commandline()
+
+A simple commandline parser that determines which files are run and makes most
+code parameters user-facing.
+"""
 function parse_commandline()
     s=ArgParseSettings()
     @add_arg_table s begin
@@ -79,6 +85,13 @@ function parse_commandline()
     return parse_args(s)
 end
 
+
+"""
+    run_wrapper()
+
+Reads commandline arguments and passes them to `proc_all` or start
+processing all or a subset of a given exposure.
+"""
 function run_wrapper()
     parg = parse_commandline()
 
