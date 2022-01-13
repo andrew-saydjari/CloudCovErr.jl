@@ -8,6 +8,6 @@ CurrentModule = cloudCovErr
 ```
 
 ```@autodocs
-Modules = [cloudCovErr]
+Modules = [cloudCovErr, cloudCovErr.cov]
 Order   = [:function, :type]
 ```
