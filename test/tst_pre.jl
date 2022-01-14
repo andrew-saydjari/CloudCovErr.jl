@@ -72,5 +72,31 @@ module tst_pre
         ttt_maskim2 = zeros(Bool,51,51);
         gen_mask_staticPSF!(ttt_maskim2,psfstamp,[26],[26],[200])
         @test ttt_maskim2[26,26]
+
+        psfstamp = zeros(33,33)
+        psfstamp[16,16] = 100
+        psfstamp[16,1] = 2
+
+        psfstamp1 = zeros(31,31)
+        psfstamp1[16,16] = 100
+        psfstamp1[1,8] = 1
+
+        ttt_maskim2 = zeros(Bool,51,51);
+        gen_mask_staticPSF2!(ttt_maskim2,psfstamp,psfstamp1,[26],[26],[20])
+        @test ttt_maskim2[26,26],
+        @test !ttt_maskim2[26,26-16]
+
+        psfstamp = zeros(33,33)
+        psfstamp[17,17] = 100
+        psfstamp[17,1] = 2
+
+        psfstamp1 = zeros(31,31)
+        psfstamp1[16,16] = 100
+        psfstamp1[1,8] = 1
+
+        ttt_maskim2 = zeros(Bool,51,51);
+        gen_mask_staticPSF2!(ttt_maskim2,psfstamp,psfstamp1,[26],[26],[200])
+        @test ttt_maskim2[26,26],
+        @test ttt_maskim2[26,26-16]
     end
 end

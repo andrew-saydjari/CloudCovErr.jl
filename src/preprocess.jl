@@ -6,7 +6,7 @@ using Random
 using LinearAlgebra
 
 export gen_mask_staticPSF! #
-export gen_mask_staticPSF2!
+export gen_mask_staticPSF2! #
 export prelim_infill! #
 export add_sky_noise! #
 export add_noise! #
