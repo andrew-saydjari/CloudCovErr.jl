@@ -8,11 +8,11 @@ using LinearAlgebra
 export gen_mask_staticPSF!
 export gen_mask_staticPSF2!
 export prelim_infill!
-export add_sky_noise!
-export add_noise!
-export findmaxpsf
-export kstar_circle_mask
-export im_subrng
+export add_sky_noise! #
+export add_noise! #
+export findmaxpsf #
+export kstar_circle_mask #
+export im_subrng #
 
 """
     kstar_circle_mask(Np;rlim=256) -> circmask
