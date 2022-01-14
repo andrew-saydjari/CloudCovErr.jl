@@ -71,7 +71,7 @@ provenance purposes.
 """
 function inject_rename(fname)
     splitname = split(fname,"/")
-    splitname[4] = "decapsi"
+    splitname[end-1] = "decapsi"
     return chop(join(splitname,"/"),tail=7)*"I.fits.fz"
 end
 
