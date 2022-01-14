@@ -1,9 +1,5 @@
 # cloudCovErr.jl
 
-```@meta
-CurrentModule = cloudCovErr
-```
-
 [![GitHub](https://img.shields.io/badge/Code-GitHub-black.svg)](https://github.com/andrew-saydjari/cloudCovErr.jl)
 [![Build Status](https://github.com/andrew-saydjari/cloudCovErr.jl/workflows/Unit%20test/badge.svg)](https://github.com/andrew-saydjari/cloudCovErr.jl/actions)
 [![Coverage Status](https://codecov.io/github/andrew-saydjari/cloudCovErr.jl/coverage.svg?branch=main)](https://codecov.io/github/andrew-saydjari/cloudCovErr.jl?branch=main)
@@ -20,9 +16,15 @@ pkg> add cloudCovErr
 
 ## Usage
 
+To start, load the `cloudCovErr.jl` package:
+
 ```julia
 using cloudCovErr
 ```
+
+For now, please refer to examples in the release paper and its accompanying Zenodo repository. And end-to-end demonstration of this code applied to the DECaPS2 survey begins with calling `decaps2.jl`.
+
+Use of individual functions is documented here in the API Reference page.
 
 ## Table of Contents
 

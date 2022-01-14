@@ -33,12 +33,12 @@ kstar_circle_mask
 ## DECam Specific Functions
 
 ```@docs
-read_decam
-read_crowdsource
-inject_rename
-load_psfmodel_cs
-save_fxn
-get_catnames
-proc_ccd
-proc_all
+decam.read_decam
+decam.read_crowdsource
+decam.inject_rename
+decam.load_psfmodel_cs
+decam.save_fxn
+decam.get_catnames
+decam.proc_ccd
+decam.proc_all
 ```
