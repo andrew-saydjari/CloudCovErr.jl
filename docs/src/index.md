@@ -22,7 +22,7 @@ To start, load the `cloudCovErr.jl` package:
 using cloudCovErr
 ```
 
-For now, please refer to examples in the release paper and its accompanying Zenodo repository. And end-to-end demonstration of this code applied to the DECaPS2 survey begins with calling `decaps2.jl`.
+For now, please refer to examples in the release paper and its accompanying Zenodo repository. An end-to-end demonstration of this code applied to the DECaPS2 survey begins with calling `decaps2.jl`.
 
 Use of individual functions is documented here in the API Reference page.
 

@@ -3,6 +3,10 @@ module tst_pre
     using cloudCovErr
     using Random
 
+    # For reasons I don't understand, even seeded
+    # the random generators on the automation machines
+    # differs from my local tests.
+
     @testset "imagePrep" begin
         out = kstar_circle_mask(3;rlim=1)
         ref = [
@@ -23,7 +27,7 @@ module tst_pre
         cy = ones(18) * (0:17)'
         out = im_subrng(2,4,cx,cy,16,16,2,2,4,4,1,1,4,4)
         @test out[1] == 4:9
-        @test out[1] == 12:17
+        @test out[2] == 12:17
         @test length(out[3]) == 20
 
         refin = [
@@ -33,11 +37,11 @@ module tst_pre
          ]
         add_noise!(refin,2;seed=2021)
         ref = [
-         10.5   9.5  14.0 ;
-         26.0  64.5  18.0 ;
-         21.0  21.0  17.5 ;
+         12.0   9.5  10.0 ;
+         31.5  70.5  18.0 ;
+         19.0  25.5  19.5 ;
          ]
-        @test ref == refin
+        @test refin == ref
 
         rng = MersenneTwister(2022)
         skyim = 10 .*ones(3,3)
@@ -46,11 +50,27 @@ module tst_pre
         testim2 = rand(rng,[-1.0,1.0],3,3)
         add_sky_noise!(testim2,maskim,skyim,4;seed=2021)
         ref = [
-         1.5  3.25  1.5 ;
-         -1.0  1.0   1.0 ;
-         1.0  1.0   1.0 ;
+         0.25  1.25  2.25 ;
+         1.0  1.0   -1.0 ;
+         -1.0  1.0   -1.0 ;
          ]
         @test testim2 == ref
 
+        ttt_testim = ones(33,33)
+        ttt_bmaskim = zeros(Bool,33,33)
+        ttt_bmaskim[16,16] = true
+        ttt_bimage = ones(33,33)
+        ttt_bimageI = ones(Int,33,33)
+        ttt_testim2 = zeros(33,33)
+        ttt_bmaskim2 = zeros(Bool,33,33)
+        ttt_goodpix = ones(Bool,33,33)
+        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx = 19, widy=19)
+        @test ttt_testim2[16,16] == 1.0
+
+        psfstamp = zeros(31,31)
+        psfstamp[16,16] = 1
+        ttt_maskim2 = zeros(Bool,51,51);
+        gen_mask_staticPSF!(ttt_maskim2,psfstamp,[26],[26],[200])
+        @test ttt_maskim2[26,26]
     end
 end
