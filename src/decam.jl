@@ -1,12 +1,12 @@
 ## Handler for reading outputs of crowdsource processing on DECaPS
 module decam
 
-export inject_rename
-export read_decam
-export read_crowdsource
-export load_psfmodel_cs
-export save_fxn
-export get_catnames
+export inject_rename #
+export read_decam #
+export read_crowdsource #
+export load_psfmodel_cs #
+export save_fxn #
+export get_catnames #
 
 export proc_ccd
 export proc_all
