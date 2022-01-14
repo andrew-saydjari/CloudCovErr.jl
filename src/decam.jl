@@ -34,7 +34,6 @@ function __init__()
     end
     py"""
     import sys
-    #sys.path.append('/n/home12/saydjari/finksage/ExtSoftware/crowdsource_new/crowdsource')
     import crowdsource.psf as psfmod
     from crowdsource.decam_proc import read_data
     from astropy.io import fits

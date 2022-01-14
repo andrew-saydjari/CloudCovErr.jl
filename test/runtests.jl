@@ -2,9 +2,9 @@ using Test
 using cloudCovErr
 
 tests = [
-    "tst_pre.jl",
+    "tst_preprocess.jl",
     "tst_cov.jl",
-    #"tst_plots.jl"
+    "tst_perstar.jl"
 ]
 
 for t in tests
