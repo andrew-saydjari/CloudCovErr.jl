@@ -32,4 +32,7 @@ module tst_cov
         f = FITS("test/data/cat/c4d_170119_085651_ooi_r_v1.cat.fits")
         @test cloudCovErr.get_catnames(f) == ["S6","S7"]
 
+        # run one real example end to end
+        @test_nowarn proc_all("test/data/decaps/c4d_","170119_085651","r","v1","test/data/",resume=true,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,tilex=8)
+    end
 end
