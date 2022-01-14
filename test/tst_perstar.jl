@@ -38,6 +38,9 @@ module tst_cov
         @test reshape(kstar,11,11)[6,end]
         @test !reshape(kstar,11,11)[6,1]
         @test (kcond0, kcond, kpred, dnt) == (71, 71, 9, 0)
+        psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel_test,circmask,x_star,y_star,flux_star,Np=11,thr=200)
+        @test !reshape(kstar,11,11)[1,1]
+        @test !reshape(kpsf2d,11,11)[1,1]
 
         Np = 5
         widx = 3

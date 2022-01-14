@@ -29,6 +29,10 @@ module tst_pre
         @test out[1] == 4:9
         @test out[2] == 12:17
         @test length(out[3]) == 20
+        out = im_subrng(1,1,cx,cy,16,16,2,2,4,4,1,1,4,4)
+        @test out[1] == 0:5
+        out = im_subrng(4,4,cx,cy,15,15,2,2,4,4,1,1,4,4)
+        @test out[1] == 12:16
 
         refin = [
          11.0  12.0   11.0 ;
@@ -64,9 +68,11 @@ module tst_pre
         ttt_testim2 = zeros(33,33)
         ttt_bmaskim2 = zeros(Bool,33,33)
         ttt_goodpix = ones(Bool,33,33)
-        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx = 19, widy=19)
+        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx=19,widy=19)
         @test ttt_testim2[16,16] == 1.0
-        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx = 1, widy=1)
+        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx=1,widy=1)
+        @test ttt_testim2[16,16] == 1.0
+        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx=19,widy=19,ftype=64)
         @test ttt_testim2[16,16] == 1.0
 
         psfstamp = zeros(31,31)

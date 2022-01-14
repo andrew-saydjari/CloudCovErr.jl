@@ -42,7 +42,7 @@ function __init__()
 
     # default decam_dir at Harvard
     if 'DECAM_DIR' not in os.environ:
-        os.environ['DECAM_DIR'] = '/n/home13/schlafly/decam'
+        os.environ['DECAM_DIR'] = dirname(@__FILE__))*"/decam_dir"
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
         f = fits.open(outfn)
