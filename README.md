@@ -8,11 +8,11 @@ Pipeline for debiasing and improving error bar estimates for photometry on top o
 
 ## Installation
 
-Currently, installation is just from github
+**cloudCovErr** is a registered package so it can be installed using `Pkg.add`.
 
 ```julia
 import Pkg
-Pkg.add("https://github.com/andrew-saydjari/cloudCovErr.jl.git")
+Pkg.add("cloudCovErr")
 ```
 
 ## Documentation
@@ -28,3 +28,9 @@ Detailed documentation can be found [here][docs-dev-url].
 
 [codecov-img]: https://codecov.io/github/andrew-saydjari/cloudCovErr.jl/coverage.svg?branch=main
 [codecov-url]: https://codecov.io/github/andrew-saydjari/cloudCovErr.jl?branch=main
+
+## Contributing and Questions
+
+This is a new piece of software. [Filing an
+issue](https://github.com/andrew-saydjari/cloudCovErr.jl/issues/new) to report a
+bug or request a feature is extremely valuable in helping us prioritize what to work on, so don't hesitate.
