@@ -21,7 +21,7 @@ per star statistics calculations.
 # Keywords:
 - `Np`: size of covariance matrix footprint around each star (default 33)
 
-# Output:
+# Outputs:
 - `data_in`: local stamp of the (non-infilled) residual image
 - `stars_in`: local stamp of model of stars only
 - `kmasked2d`: local stamp of upstream masked pixels
@@ -60,7 +60,7 @@ query the PSF at the stellar position for each star.
 - `Np`: size of local covariance matrix in pixels (default 33)
 - `thr`: threshold for psf-based masking of the residuals (larger more "hidden")
 
-# Output:
+# Outputs:
 - `psft`: static array (image) of the stellar PSF
 - `kstar`: Boolean indexes the NOT "good" pixels
 - `kpsf2d`: Boolean indexes the "hidden" pixels
@@ -149,7 +149,7 @@ draws from the distribution of reconstructions.
 - `n_draw`: when nonzero, returns that number of realizations of the conditional infilling (default 0)
 - `diag_on`: flag for adding to the pixelwise uncertainty based on the photoelectron counts of the modeled star (default true)
 
-# Output:
+# Outputs:
 - `out[1]`: flux uncertainity of the star
 - `out[2]`: flux uncertainity of the star assuming the covariance matrix were diagonal
 - `out[3]`: flux correction which must be added to correct the input flux estimate

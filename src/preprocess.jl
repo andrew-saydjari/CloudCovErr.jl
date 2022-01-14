@@ -24,7 +24,7 @@ Generates a Bool mask for pixels beyond a given (squared) radius of the center o
 # Keywords:
 - `rlim`: squared radius (in pixels^2) beyond which pixels should be masked (default 256)
 
-# Output:
+# Outputs:
 - `circmask`: static Bool mask used for assigning pixels beyond some radius of the stellar center as "ignored"
 """
 function kstar_circle_mask(Np;rlim=256)
@@ -47,7 +47,7 @@ would require a larger stamp area. Used for computational savings.
 # Keywords:
 - `thr`: threshold used to determine which pixels are bright enough to be "hidden"
 
-# Output:
+# Outputs:
 - `flim`: maximum flux that can be masked by `thr` without exceeding the PSF stamp footprint
 """
 function findmaxpsf(psfstamp1;thr=20)
@@ -76,7 +76,7 @@ would require a larger stamp area. Used for computational savings.
 - `tilex`: total number of tile divisions along x
 - `tiley`: total number of tile divisions along y
 
-# Output:
+# Outputs:
 - `xrng`: slicing range of the tile in x
 - `yrng`: slicing range of the tile in y
 - `star_ind`: Bool mask of all stars falling within the tile (subimage)

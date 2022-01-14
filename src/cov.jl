@@ -16,7 +16,7 @@ Helper function to find maximum padding in pixels required to accomodate all que
 - `cx`: list of integer star centers (in either x or y)
 - `sx`: image dimension along the axis indexed by `cx`
 
-# Output:
+# Outputs:
 - `px0`: maximum padding in pixels required to accomodate all query points
 """
 function outest_bounds(cx,sx)

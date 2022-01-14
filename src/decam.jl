@@ -56,6 +56,19 @@ end
 
 ## File specific read/write functions
 
+"""
+    inject_rename(fname) -> ifname
+
+Convenience renaming file paths to read data from injection tests
+which are stored separately from data obtained on DECam for data
+provenance purposes.
+
+# Arguments:
+- `fname`: file name for exposure data from DECam
+
+# Output:
+- `ifname`: corresponding file name for injection tests into that exposure
+"""
 function inject_rename(fname)
     splitname = split(fname,"/")
     splitname[4] = "decapsi"
@@ -80,9 +93,13 @@ on what is contained in each file and how they are obtained.
 # Keywords:
 - `corrects7`: use `crowdsource` load to read ccd "S7" to correct for floating amplifier on half of the chip (default true)
 
+# Output:
+- `ref_im`: image of photoelectron counts from observation on DECam
+- `d_im`: quality flag mask image from NOAO community pipeline
+
 # Example
 ```julia
-ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
+ref_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
 ```
 """
 function read_decam(base,date,filt,vers,ccd;corrects7=true)
@@ -115,23 +132,38 @@ function read_decam(base,date,filt,vers,ccd;corrects7=true)
 end
 
 """
-    read_crowdsource(base,date,filt,vers,ccd) -> x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im
+    read_crowdsource(basecat,date,filt,vers,ccd) -> x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w
 
 Read in outputs of crowdsource, a photometric pipeline. To pair with an arbitrary
 photometric pipeline, an analogous read in function should be created. The relevant
 outputs are the model image (including the sources) so that we can produce the
 residual image, the sky/background model (no sources), and the coordinates of the stars.
 The survey id number is also readout of the pipeline solution file to help
-cross-validate matching of the disCovErr outputs and the original sources. The empirical
+cross-validate matching of the cloudCovErr outputs and the original sources. The empirical
 gain is read out of the header (for other photometric pipelines which don't perform this estiamte,
-the gain from DECam is likely sufficient).
+the gain from DECam is likely sufficient). All columns from the photometric catalogue are
+also read in at this point to be rexported with the cloudCovErr outputs.
 
 # Arguments:
-- `base`: parent directory and file name prefix for crowdsource results files
+- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
 - `date`: date_time of the exposure
 - `filt`: optical filter used to take the exposure
 - `vers`: NOAO community processing version number
 - `ccd`: which ccd we are pulling the image for
+
+# Keywords:
+- `corrects7`: use `crowdsource` load to read ccd "S7" to correct for floating amplifier on half of the chip (default true)
+
+# Output:
+- `x_stars`: list of source x-coordinates (accounting for indexing order and start point)
+- `y_stars`: list of source y-coordinates (accounting for indexing order and start point)
+- `flux_stars`: list of stellar fluxes in ADU
+- `decapsid`: list of survey id number for each detection
+- `gain`: gain of detector to convert from photon count noise to detector noise
+- `mod_im`: model image (including the sources) from photometric pipeline
+- `sky_im`: sky image (background estimate) from photometric pipeline
+- `wcol`: list of all column names in photometric catalogue
+- `w`: list of all column values in photometric catalogue
 """
 function read_crowdsource(basecat,date,filt,vers,ccd)
     f = FITS(basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits")
@@ -175,6 +207,9 @@ of the desired psfstamp (the stamps are square and required to be odd).
 - `filt`: optical filter used to take the exposure
 - `vers`: NOAO community processing version number
 - `ccd`: which ccd we are pulling the image for
+
+# Output:
+- `psfmodel`: function that returns PSF stamp from parametric PSF model that is a function of position
 """
 function load_psfmodel_cs(base,date,filt,vers,ccd)
     psfmodel_py = py"load_psfmodel"(base*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits",ccd,filt)
@@ -185,6 +220,23 @@ function load_psfmodel_cs(base,date,filt,vers,ccd)
     return psfmodel_jl
 end
 
+"""
+    save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+
+Saves cloudCovErr.jl outputs and initial photometric catalogue outputs to a new
+single-epoch catalogue. Massages types of columns to reduce data storage size.
+Converts the native cloudCovErr.jl output of the bias offset value into a `cflux`
+corrected flux column for the ease of catalogue users.
+
+# Arguments:
+- `wcol`: list of all column names in photometric catalogue
+- `w`: list of all column values in photometric catalogue
+- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `ccd`: which ccd we are pulling the image for
+"""
 function save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     for i=1:length(wcol)
         if (wcol[i] == "passno") | (wcol[i] == "dnt")
@@ -207,6 +259,23 @@ function save_fxn(wcol,w,basecat,date,filt,vers,ccd)
     close(f)
 end
 
+"""
+    save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+
+Saves cloudCovErr.jl outputs and initial photometric catalogue outputs to a new
+single-epoch catalogue. Massages types of columns to reduce data storage size.
+Converts the native cloudCovErr.jl output of the bias offset value into a `cflux`
+corrected flux column for the ease of catalogue users.
+
+# Arguments:
+- `wcol`: list of all column names in photometric catalogue
+- `w`: list of all column values in photometric catalogue
+- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `ccd`: which ccd we are pulling the image for
+"""
 function get_catnames(f)
     nhdu = length(f)
     extnames = String[]
@@ -224,6 +293,31 @@ end
 # combines all of the functions in the repo for
 # an acutal implementation
 
+"""
+    proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+
+Primary run function for a given CCD image of a larger exposure.
+
+# Arguments:
+- `base`: parent directory and file name prefix for exposure files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
+- `ccd`: which ccd we are pulling the image for
+
+# Keywords:
+- `thr`: threshold used for flux-dependent masking (default 20)
+- `outthr`: threshold for residual-based masking (default 20000)
+- `Np`: size of local covariance matrix in pixels (default 33)
+- `corrects7`: use `crowdsource` load to read ccd "S7" to correct for floating amplifier on half of the chip (default true)
+- `widx`: width of boxcar window in x which determines size of region used for samples for the local covariance estimate (default 129)
+- `widy`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate (default 129)
+- `tilex`: total number of tile divisions along x (default 1)
+- `tiley`: total number of tile divisions along y (default tilex)
+- `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
+- `prealloc`: preallocation above the per-ccd level (default false, not recommended)
+"""
 function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     println("Started $ccd")
     flush(stdout)
@@ -378,6 +472,32 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
     return
 end
 
+"""
+    proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+
+Exposure level run function the manages which ccds to run and calls proc_ccd serially.
+
+# Arguments:
+- `base`: parent directory and file name prefix for exposure files
+- `date`: date_time of the exposure
+- `filt`: optical filter used to take the exposure
+- `vers`: NOAO community processing version number
+- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
+
+# Keywords:
+- `ccdlist`: run only ccds in this list
+- `resume`: if the exposure is partially complete, resume running from where it left off (default false)
+- `corrects7`: use `crowdsource` load to read ccd "S7" to correct for floating amplifier on half of the chip (default true)
+- `thr`: threshold used for flux-dependent masking (default 20)
+- `outthr`: threshold for residual-based masking (default 20000)
+- `Np`: size of local covariance matrix in pixels (default 33)
+- `widx`: width of boxcar window in x which determines size of region used for samples for the local covariance estimate (default 129)
+- `widy`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate (default 129)
+- `tilex`: total number of tile divisions along x (default 1)
+- `tiley`: total number of tile divisions along y (default tilex)
+- `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
+- `prealloc`: preallocation above the per-ccd level (default false, not recommended)
+"""
 function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
