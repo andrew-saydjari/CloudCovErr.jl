@@ -18,17 +18,17 @@ module tst_preprocess
         # prelim_infill!(ttt_testim,ttt_maskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_maskim2, ttt_goodpix, widx = 1, widy=1)
         # @test ttt_testim2 == ones(33,33)
 
-        ttt_testim2 = ones(2,2)
-        ttt_maskim2 = ones(Bool,2,2)
-        ttt_skyim3 = 10*ones(2,2)
-        add_sky_noise!(ttt_testim2,ttt_maskim2,ttt_skyim3,4,seed=2021)
-        @test ttt_testim2 == [0.25 2.25; 1.25 2.5]
-
-        psfstamp = zeros(31,31)
-        psfstamp[16,16] = 1
-        ttt_maskim2 = zeros(Bool,51,51);
-        gen_mask_staticPSF!(ttt_maskim2,psfstamp,[26],[26],[200])
-        @test ttt_maskim2[26,26]
+        # ttt_testim2 = ones(2,2)
+        # ttt_maskim2 = ones(Bool,2,2)
+        # ttt_skyim3 = 10*ones(2,2)
+        # add_sky_noise!(ttt_testim2,ttt_maskim2,ttt_skyim3,4,seed=2021)
+        # @test ttt_testim2 == [0.25 2.25; 1.25 2.5]
+        #
+        # psfstamp = zeros(31,31)
+        # psfstamp[16,16] = 1
+        # ttt_maskim2 = zeros(Bool,51,51);
+        # gen_mask_staticPSF!(ttt_maskim2,psfstamp,[26],[26],[200])
+        # @test ttt_maskim2[26,26]
 
         # kpsf2d=zeros(Bool,3,3)
         # kpsf2d[2,2] = true
@@ -66,13 +66,13 @@ module tst_preprocess
         # ]
         # @test all((condCovEst_wdiag(cov_loc,μ,kstar,kpsf2d,data_in,data_w,stars_in,psft) .- [133.725  132.769  5.59213e-5  -10.7856  0.906103  4.94119e-5]) .< 1e-2)
 
-        ttt_residimIn = ones(51,51)
-        ttt_maskim = zeros(Bool,51,51)
-        ttt_maskim[26,26] = true
-        ttt_w_im = ones(51,51)
-        ttt_mod_im = ones(51,51)
-        ttt_skyim = ones(51,51);
-        data_in, data_w, stars_in, kmasked2d = stamp_cutter(26.1,26.1,ttt_residimIn,ttt_w_im,ttt_mod_im,ttt_skyim,ttt_maskim)
-        @test kmasked2d[17,17]
+        # ttt_residimIn = ones(51,51)
+        # ttt_maskim = zeros(Bool,51,51)
+        # ttt_maskim[26,26] = true
+        # ttt_w_im = ones(51,51)
+        # ttt_mod_im = ones(51,51)
+        # ttt_skyim = ones(51,51);
+        # data_in, data_w, stars_in, kmasked2d = stamp_cutter(26.1,26.1,ttt_residimIn,ttt_w_im,ttt_mod_im,ttt_skyim,ttt_maskim)
+        # @test kmasked2d[17,17]
     end
 end

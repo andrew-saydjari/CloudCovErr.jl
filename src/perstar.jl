@@ -1,9 +1,9 @@
 using LinearAlgebra
 
-export stamp_cutter
-export gen_pix_mask
-export condCovEst_wdiag
-export build_cov!
+export stamp_cutter #
+export gen_pix_mask #
+export condCovEst_wdiag #
+export build_cov! #
 
 """
     stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33) -> data_in, stars_in, kmasked2d
@@ -37,7 +37,7 @@ function stamp_cutter(cx,cy,residimIn,star_im,maskim;Np=33)
 end
 
 """
-    gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,thr=20) -> psft, kstar[:], kpsf2d, kcond0, kcond, kpred, dnt
+    gen_pix_mask(kmasked2d,psfmodel,circmask,x_star,y_star,flux_star;Np=33,thr=20) -> psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt
 
 Assigns pixels in the local subimage around a star to either be "good", "hidden", or "ignored"
 based on user settings and the flux of the star. Reads in masked pixels from the quality
@@ -150,14 +150,14 @@ draws from the distribution of reconstructions.
 - `diag_on`: flag for adding to the pixelwise uncertainty based on the photoelectron counts of the modeled star (default true)
 
 # Outputs:
-- `out[1]`: flux uncertainity of the star
-- `out[2]`: flux uncertainity of the star assuming the covariance matrix were diagonal
-- `out[3]`: flux correction which must be added to correct the input flux estimate
-- `out[4]`: flux correction coming from the residuals (fdb_res)
-- `out[5]`: flux correction coming from the predicted background (fdb_pred)
-- `out[6]`: chi2 for the "good" pixels under `cov_loc` as a metric on how good our assumptions are
-- `out[7]`: local region (image) with "hidden" pixels replaced by the mean conditional estimate (optional output)
-- `out[end:end+n_draw]`: local region (image) with "hidden" pixels replaced by the draws from the conditional distribution (optional output)
+- `out[1][1]`: flux uncertainity of the star
+- `out[1][2]`: flux uncertainity of the star assuming the covariance matrix were diagonal
+- `out[1][3]`: flux correction which must be added to correct the input flux estimate
+- `out[1][4]`: flux correction coming from the residuals (fdb_res)
+- `out[1][5]`: flux correction coming from the predicted background (fdb_pred)
+- `out[1][6]`: chi2 for the "good" pixels under `cov_loc` as a metric on how good our assumptions are
+- `out[2]`: local region (image) with "hidden" pixels replaced by the mean conditional estimate (optional output)
+- `out[end]`: local region (image) with "hidden" pixels replaced by the draws from the conditional distribution (optional output). Array is flattened to npix x n_draw.
 """
 function condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0,diag_on=true)
     k = .!km
