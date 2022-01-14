@@ -5,6 +5,10 @@ makedocs(
     clean=true,
     highlightsig = true,
     sitename= "cloudCovErr.jl",
+    pages    = [
+        "Introduction" => "index.md",
+        "API Reference" => "api.md"
+    ]
 )
 
 deploydocs(

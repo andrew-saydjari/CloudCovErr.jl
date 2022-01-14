@@ -260,21 +260,17 @@ function save_fxn(wcol,w,basecat,date,filt,vers,ccd)
 end
 
 """
-    save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+    get_catnames(f) -> extnames
 
-Saves cloudCovErr.jl outputs and initial photometric catalogue outputs to a new
-single-epoch catalogue. Massages types of columns to reduce data storage size.
-Converts the native cloudCovErr.jl output of the bias offset value into a `cflux`
-corrected flux column for the ease of catalogue users.
+Reads list of extension names from an open FITS file to determine which
+CCDs have completed photometric catalogues and are eligible for cloudCovErr.jl.
 
 # Arguments:
-- `wcol`: list of all column names in photometric catalogue
-- `w`: list of all column values in photometric catalogue
-- `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
-- `date`: date_time of the exposure
-- `filt`: optical filter used to take the exposure
-- `vers`: NOAO community processing version number
-- `ccd`: which ccd we are pulling the image for
+- `f`: an open FITS file handle containing `crowdsource` catalogues
+
+# Outputs:
+- `extnames`: list of CCDs that have photometric catalogues in f
+
 """
 function get_catnames(f)
     nhdu = length(f)
