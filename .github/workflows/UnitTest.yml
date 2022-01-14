@@ -1,6 +1,6 @@
 name: Unit test
 
-on: [workflow_dispatch] #push
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
   test:
@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        julia-version: ['nightly'] #['1.0', '1', 'nightly']
+        julia-version: ['1.0', '1', 'nightly']
         os: [ubuntu-latest, macOS-latest] #[ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
