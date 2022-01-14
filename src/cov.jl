@@ -5,7 +5,7 @@ import ShiftedArrays
 
 export cov_avg!
 export boxsmooth!
-export outest_bounds
+export outest_bounds #
 
 """
     outest_bounds(cx,sx) -> px0
@@ -25,9 +25,9 @@ function outest_bounds(cx,sx)
     if sortcx[1] < 1
         px0 = abs(sortcx[1]-1)
     end
-    if sortcx[1] > sx
-        if px0 < (sortcx[1]-sx)
-            px0 = (sortcx[1]-sx)
+    if sortcx[end] > sx
+        if px0 < (sortcx[end]-sx)
+            px0 = (sortcx[end]-sx)
         end
     end
     return px0

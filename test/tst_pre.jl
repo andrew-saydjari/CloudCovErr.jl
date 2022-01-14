@@ -66,6 +66,8 @@ module tst_pre
         ttt_goodpix = ones(Bool,33,33)
         prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx = 19, widy=19)
         @test ttt_testim2[16,16] == 1.0
+        prelim_infill!(ttt_testim,ttt_bmaskim,ttt_bimage,ttt_bimageI,ttt_testim2,ttt_bmaskim2,ttt_goodpix,"N4",widx = 1, widy=1)
+        @test ttt_testim2[16,16] == 1.0
 
         psfstamp = zeros(31,31)
         psfstamp[16,16] = 1
@@ -83,7 +85,7 @@ module tst_pre
 
         ttt_maskim2 = zeros(Bool,51,51);
         gen_mask_staticPSF2!(ttt_maskim2,psfstamp,psfstamp1,[26],[26],[20])
-        @test ttt_maskim2[26,26],
+        @test ttt_maskim2[26,26]
         @test !ttt_maskim2[26,26-16]
 
         psfstamp = zeros(33,33)
@@ -96,7 +98,7 @@ module tst_pre
 
         ttt_maskim2 = zeros(Bool,51,51);
         gen_mask_staticPSF2!(ttt_maskim2,psfstamp,psfstamp1,[26],[26],[200])
-        @test ttt_maskim2[26,26],
+        @test ttt_maskim2[26,26]
         @test ttt_maskim2[26,26-16]
     end
 end
