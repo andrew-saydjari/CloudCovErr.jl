@@ -1,6 +1,7 @@
 module tst_cov
     using Test
     using cloudCovErr
+    using FITSIO
 
     test_dir = dirname(@__FILE__)
 
