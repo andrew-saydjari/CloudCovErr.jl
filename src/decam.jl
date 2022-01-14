@@ -32,6 +32,7 @@ function __init__()
         #Conda.add("nomkl",channel="conda-forge")
         Conda.add("crowdsourcephoto",channel="conda-forge")
     end
+    decam_dir = dirname(@__FILE__))*"/decam_dir"
     py"""
     import sys
     import crowdsource.psf as psfmod
@@ -42,7 +43,7 @@ function __init__()
 
     # default decam_dir at Harvard
     if 'DECAM_DIR' not in os.environ:
-        os.environ['DECAM_DIR'] = dirname(@__FILE__))*"/decam_dir"
+        os.environ['DECAM_DIR'] = $decam_dir
 
     def load_psfmodel(outfn, ccd, filter, pixsz=9):
         f = fits.open(outfn)

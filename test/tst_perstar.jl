@@ -41,6 +41,25 @@ module tst_cov
         psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel_test,circmask,x_star,y_star,flux_star,Np=11,thr=200)
         @test !reshape(kstar,11,11)[1,1]
         @test !reshape(kpsf2d,11,11)[1,1]
+        function psfmodel_test(x,y,Np)
+            psftest = [
+             0.02  0.02  0.03  0.03  0.04  0.04  0.04  0.03  0.03  0.02  0.02;
+             0.02  0.03  0.04  0.05  0.06  0.06  0.06  0.05  0.04  0.03  0.02;
+             0.03  0.04  0.05  0.07  0.09  0.1   0.09  0.07  0.05  0.04  0.03;
+             0.03  0.05  0.07  0.11  0.17  0.2   0.17  0.11  0.07  0.05  0.03;
+             0.04  0.06  0.09  0.17  0.33  0.5   0.33  0.17  0.09  0.06  0.04;
+             0.04  0.06  0.1   0.2   0.5   1.0   0.5   0.2   0.1   0.06  0.04;
+             0.04  0.06  0.09  0.17  0.33  0.5   0.33  0.17  0.09  0.06  0.04;
+             0.03  0.05  0.07  0.11  0.17  0.2   0.17  0.11  0.07  0.05  0.03;
+             0.03  0.04  0.05  0.07  0.09  0.1   0.09  0.07  0.05  0.04  0.03;
+             0.02  0.03  0.04  0.05  0.06  0.06  0.06  0.05  0.04  0.03  0.02;
+             -0.2  0.02  0.03  0.03  0.04  0.04  0.04  0.03  0.03  0.02  0.02;
+            ]
+            return psftest
+        end
+        flux_star = 1e5
+        psft, kstar, kpsf2d, kcond0, kcond, kpred, dnt = gen_pix_mask(kmasked2d,psfmodel_test,circmask,x_star,y_star,flux_star,Np=11,thr=200)
+        @test (dnt .& 2^5) != 0
 
         Np = 5
         widx = 3
