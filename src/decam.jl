@@ -63,10 +63,10 @@ function inject_rename(fname)
 end
 
 """
-    read_decam(base,date,filt,vers,ccd) -> ref_im, w_im, d_im
+    read_decam(base,date,filt,vers,ccd;corrects7=true) -> ref_im, d_im
 
 Read in raw image files associated with exposures obtain on the DarkEnergyCamera.
-Returns the image, a weighting image, and a quality flag mask image. See [NOAO
+Returns the image and a quality flag mask image. See [NOAO
 handbook](http://ast.noao.edu/sites/default/files/NOAO_DHB_v2.2.pdf) for more details
 on what is contained in each file and how they are obtained.
 
@@ -77,13 +77,15 @@ on what is contained in each file and how they are obtained.
 - `vers`: NOAO community processing version number
 - `ccd`: which ccd we are pulling the image for
 
+# Keywords:
+- `corrects7`: use `crowdsource` load to read ccd "S7" to correct for floating amplifier on half of the chip (default true)
+
 # Example
 ```julia
 ref_im, w_im, d_im = read_decam("/n/fink2/decaps/c4d_","170420_040428","g","v1","N14")
 ```
-
 """
-function read_decam(base,date,filt,vers,ccd; corrects7=true)
+function read_decam(base,date,filt,vers,ccd;corrects7=true)
     ifn = base*date*"_ooi_"*filt*"_"*vers*".fits.fz"
     wfn = base*date*"_oow_"*filt*"_"*vers*".fits.fz"
     dfn = base*date*"_ood_"*filt*"_"*vers*".fits.fz"

@@ -206,7 +206,7 @@ function gen_mask_staticPSF2!(bmaskd, psfstamp, psfstamp1, x_stars, y_stars, flu
 end
 
 """
-    prelim_infill!(testim,maskim,bimage,bimageI,testim2, maskim2, goodpix; widx = 19, widy=19)
+    prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype::Int=32,widmult=1.4)
 
 This intial infill replaces masked pixels with a guess based on a smoothed
 boxcar. For large masked regions, the smoothing scale is increased. If this
@@ -214,21 +214,27 @@ iteration takes too long/requires too strong of masking, the masked pixels
 are replaced with the median of the image.
 
 We use 3 copies of the input image and mask image. The first
-is an untouched view (with reflective boundary condition padding), the second
-is allocated to hold various smoothings of the image, and the third holds the
-output image which contains our best infill guess. A final bool array of size
-corresponding to the image is used to keep track of pixels that have safe
+is a view (with reflective boundary condition padding) with the pixels to be infilled
+replaced with zeros, the second is allocated to hold various smoothings of the image,
+and the third holds the output image which contains our best infill guess. A final Bool
+array of size corresponding to the image is used to keep track of pixels that have safe
 infill values.
 
 # Arguments:
 - `testim`: input image which requires infilling
+- `bmaskim`: input mask indicating which pixels require infilling
 - `bimage`: preallocated array for smoothed version of input image
-- `testim2`: inplace modified ouptut array for infilled version of image input
-- `maskim`: input mask indicating which pixels require infilling
 - `bimageI`: preallocated array for smoothed mask counting the samples for each estimate
-- `maskim2`: inplace modified mask to keep track of which pixels still need infilling
-- `widx::Int`: size of boxcar smoothing window in x
-- `widy::Int`: size of boxcar smoothing window in y
+- `testim2`: inplace modified ouptut array for infilled version of image input
+- `bmaskim2`: inplace modified mask to keep track of which pixels still need infilling
+- `goodpix`: preallocated array for Bool indexing pixels with good infill
+- `ccd`: string name of FITS extension for verbose cmdline printing
+
+# Keywords:
+- `widx`: initial size of boxcar smoothing window in x (default 19)
+- `widy`: initial size of boxcar smoothing window in y (default 19)
+- `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
+- `widmult`: multiplicative factor for increasing the smoothing scale at each iteration step
 """
 function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype::Int=32,widmult=1.4)
     if ftype == 32
@@ -293,7 +299,7 @@ function prelim_infill!(testim,bmaskim,bimage,bimageI,testim2,bmaskim2,goodpix,c
 end
 
 """
-    add_sky_noise!(testim2,maskim0,skyim3,gain;seed=2021)
+    add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
 
 Adds noise to the infill that matches the Poisson noise of a rough estimate for
 the sky background. A random seed to set a local random generator is provided for
@@ -301,9 +307,11 @@ reproducible unit testing.
 
 # Arguments:
 - `testim2`: input image which had infilling
-- `maskim0`: mask of pixels which were infilled
-- `skyim3`: rough estimate of sky background counts
+- `maskim`: mask of pixels which were infilled
+- `skyim`: rough estimate of sky background counts
 - `gain`: gain of detector to convert from photon count noise to detector noise
+
+# Keywords:
 - `seed`: random seed for random generator
 """
 function add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
@@ -316,6 +324,19 @@ function add_sky_noise!(testim2,maskim,skyim,gain;seed=2021)
     end
 end
 
+"""
+    add_noise!(testim2,gain;seed=2021)
+
+Adds noise to an image that matches the Poisson noise of the pixel counts.
+A random seed to set a local random generator is provided for reproducible unit testing.
+
+# Arguments:
+- `testim2`: input image which had infilling
+- `gain`: gain of detector to convert from photon count noise to detector noise
+
+# Keywords:
+- `seed`: random seed for random generator
+"""
 function add_noise!(testim2,gain;seed=2021)
     rng = MersenneTwister(seed)
     for i in eachindex(testim2)
