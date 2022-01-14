@@ -32,7 +32,7 @@ function __init__()
         #Conda.add("nomkl",channel="conda-forge")
         Conda.add("crowdsourcephoto",channel="conda-forge")
     end
-    decam_dir = dirname(@__FILE__))*"/decam_dir"
+    decam_dir = dirname(@__FILE__)*"/decam_dir"
     py"""
     import sys
     import crowdsource.psf as psfmod
