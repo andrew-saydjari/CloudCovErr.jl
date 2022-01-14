@@ -1,6 +1,7 @@
 module tst_cov
     using Test
     using cloudCovErr
+    using Random
 
     @testset "PerStar" begin
         ttt_residimIn = ones(51,51)
@@ -62,9 +63,10 @@ module tst_cov
         cov1 = zeros(T,Np*Np,Np*Np)
         μ1 = zeros(T,Np*Np)
         cov_avg!(bimage, ism, bism, in_subimage, Np=Np, widx=widx, widy=widy)
-        @test cov1[1,1]
-        @test cov1[1,end]
-        @test cov1[end,end]
+        build_cov!(cov1,μ1,6,6,bimage,bism,Np,widx,widy)
+        @test abs(cov1[1,1]-271.500183105)<1e-7
+        @test abs(cov1[1,end]-271.499633789)<1e-7
+        @test abs(cov1[end,end]-271.500732421875)<1e-7
 
         kpsf2d=zeros(Bool,3,3)
         kpsf2d[2,2] = true
