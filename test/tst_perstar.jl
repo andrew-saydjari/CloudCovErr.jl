@@ -1,7 +1,6 @@
 module tst_cov
     using Test
     using cloudCovErr
-    using Random
 
     @testset "PerStar" begin
         ttt_residimIn = ones(51,51)
@@ -96,8 +95,11 @@ module tst_cov
         km = kpsf2d[:]
         km[1] = true
         km[end] = true
-        rng=MersenneTwister(2021)
-        data_in = randn(rng,3,3)
+        data_in = [
+          0.516654    0.128205   1.94308;
+         -0.0805772  -0.920908   0.212453;
+         -0.774471    0.165229  -0.363535;
+        ]
         stars_in = 2*ones(3,3)
         cov_loc = [
         47.2245   1.33946   0.628186   0.841306   0.288469  -0.437706   0.754434  -0.245601  -0.150857;

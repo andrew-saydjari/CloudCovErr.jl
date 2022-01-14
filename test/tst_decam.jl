@@ -21,7 +21,7 @@ module tst_cov
         if isfile("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
             rm("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
         end
-        save_fxn(wcol,w,"/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/","170119_085651","r","v1","S6")
+        cloudCovErr.save_fxn(wcol,w,"/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/","170119_085651","r","v1","S6")
         f = FITS("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
         @test length(read(f["S6_CAT"],"x")) == 14572
         close(f)

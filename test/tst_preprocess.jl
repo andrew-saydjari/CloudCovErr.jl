@@ -3,9 +3,8 @@ module tst_pre
     using cloudCovErr
     using Random
 
-    # For reasons I don't understand, even seeded
-    # the random generators on the automation machines
-    # differs from my local tests.
+    # Random generators do not promise the same streams between
+    # different Julia releases... that is highly frustrating.
 
     @testset "imagePrep" begin
         out = kstar_circle_mask(3;rlim=1)
@@ -47,11 +46,14 @@ module tst_pre
          ]
         @test refin == ref
 
-        rng = MersenneTwister(2022)
         skyim = 10 .*ones(3,3)
         maskim = zeros(Bool,3,3)
         maskim[1,:] .= true
-        testim2 = rand(rng,[-1.0,1.0],3,3)
+        testim2 = [
+          1.0  1.0  1.0;
+         -1.0  1.0  1.0;
+          1.0  1.0  1.0;
+        ]
         add_sky_noise!(testim2,maskim,skyim,4;seed=2021)
         ref = [
          0.25  1.25  2.25 ;
