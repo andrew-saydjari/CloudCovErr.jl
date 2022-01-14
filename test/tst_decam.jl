@@ -10,26 +10,26 @@ module tst_cov
         @test d_im[1,1] == 1
         @test abs(ref_im[1]-416.4855651855) < 1e-7
 
-        out = cloudCovErr.read_crowdsource("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/","170119_085651","r","v1","S6")
+        out = cloudCovErr.read_crowdsource("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/","170119_085651","r","v1","S6")
         @test length(out) == 9
         wcol = out[end-1]
         w = out[end]
 
-        out = cloudCovErr.load_psfmodel_cs("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/","170119_085651","r","v1","S6")
+        out = cloudCovErr.load_psfmodel_cs("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/","170119_085651","r","v1","S6")
         @test size(out(1,1,11)) == (11,11)
 
-        if isfile("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
-            rm("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
+        if isfile("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
+            rm("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
         end
-        save_fxn(wcol,w,"/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/","170119_085651","r","v1","S6")
-        f = FITS("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
+        save_fxn(wcol,w,"/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/","170119_085651","r","v1","S6")
+        f = FITS("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
         @test length(read(f["S6_CAT"],"x")) == 14572
         close(f)
-        if isfile("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
-            rm("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
+        if isfile("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
+            rm("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cer/c4d_170119_085651_ooi_r_v1.cat.cer.fits")
         end
 
-        f = FITS("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/cat/c4d_170119_085651_ooi_r_v1.cat.fits")
+        f = FITS("/home/runner/work/cloudCovErr.jl/cloudCovErr.jl/test/data/decaps/cat/c4d_170119_085651_ooi_r_v1.cat.fits")
         @test cloudCovErr.get_catnames(f) == ["S6","S7"]
 
         # run one real example end to end

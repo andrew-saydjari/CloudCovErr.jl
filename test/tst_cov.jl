@@ -50,5 +50,17 @@ module tst_cov
         @test ism[1,end] == 21266.0
         @test bism[:,:,1:4,1] == zeros(stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,4)
         @test bism[end,1,1,2] == 19488.0
+
+        T = Float64
+        in_subimage = zeros(T,stepx+2*padx,stepy+2*pady)
+        in_subimage = convert(Array{Float32,2},reshape(1:size(in_subimage)[1]*size(in_subimage)[2],size(in_subimage)))
+        ism = zeros(T,stepx+2*padx,stepy+2*pady)
+        bimage = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy)
+        bism = zeros(T,stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,2*Np-1, Np);
+        cov_avg!(bimage,ism,bism,in_subimage,Np=Np,widx=widx,widy=widy,ftype=64)
+        @test bimage[end,end] == 3069
+        @test ism[1,end] == 21266.0
+        @test bism[:,:,1:4,1] == zeros(stepx+2*padx-2*Δx,stepy+2*pady-2*Δy,4)
+        @test bism[end,1,1,2] == 19488.0
     end
 end
