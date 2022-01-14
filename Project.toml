@@ -1,6 +1,6 @@
 name = "cloudCovErr"
 uuid = "06334dd7-98ce-4d72-a129-750f571d4b02"
-version = "0.1.1"
+version = "0.9.1"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
