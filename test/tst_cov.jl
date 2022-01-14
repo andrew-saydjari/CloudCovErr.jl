@@ -3,8 +3,8 @@ module tst_cov
     using cloudCovErr
 
     @testset "CovEst" begin
-        @test outest_bounds([-1,101],100) == 2
-        @test outest_bounds([-1,101],100) == 5
+        @test outest_bounds([-1,100],100) == 2
+        @test outest_bounds([-1,105],100) == 5
 
         # X, Y = cov_construct(ones(256,256),[128],[128])
         # @test (X == zeros(1,33^2,33^2)).&(Y==ones(1,33^2))
