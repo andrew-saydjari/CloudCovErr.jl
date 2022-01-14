@@ -2,7 +2,7 @@ using cloudCovErr
 using Documenter
 
 makedocs(
-    modules = [cloudCovErr, decam],
+    modules = [cloudCovErr, cloudCovErr.decam],
     clean=true,
     highlightsig = true,
     sitename= "cloudCovErr.jl",
