@@ -1,10 +1,10 @@
-# cloudCovErr.jl
+# cloudCovErr.jl <img src="docs/src/assets/logo.png" alt="cloudCovErr Logo" width="100" align="right"/>
 
 [![][action-img]][action-url]
 [![][docs-dev-img]][docs-dev-url]
 [![][codecov-img]][codecov-url]
 
-Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background.
+Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background. The procedure first estimates the covariance matrix of the residuals from a previous photometric model and then computes corrections to the estimated flux and flux uncertainties.
 
 ## Installation
 
