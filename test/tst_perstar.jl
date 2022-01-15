@@ -1,6 +1,6 @@
 module tst_cov
     using Test
-    using cloudCovErr
+    using CloudCovErr
 
     @testset "PerStar" begin
         ttt_residimIn = ones(51,51)

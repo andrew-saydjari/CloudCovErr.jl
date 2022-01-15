@@ -1,6 +1,6 @@
 module tst_cov
     using Test
-    using cloudCovErr
+    using CloudCovErr
 
     @testset "CovEst" begin
         @test outest_bounds([-1,100],100) == 2

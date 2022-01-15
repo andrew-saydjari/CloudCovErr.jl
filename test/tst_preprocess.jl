@@ -1,6 +1,6 @@
 module tst_pre
     using Test
-    using cloudCovErr
+    using CloudCovErr
     using Random
 
     # Random generators do not promise the same streams between

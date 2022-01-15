@@ -11,7 +11,7 @@ export get_catnames #
 export proc_ccd
 export proc_all
 
-using cloudCovErr
+using CloudCovErr
 using PyCall
 using FITSIO
 import ImageFiltering
@@ -138,10 +138,10 @@ photometric pipeline, an analogous read in function should be created. The relev
 outputs are the model image (including the sources) so that we can produce the
 residual image, the sky/background model (no sources), and the coordinates of the stars.
 The survey id number is also readout of the pipeline solution file to help
-cross-validate matching of the cloudCovErr outputs and the original sources. The empirical
+cross-validate matching of the CloudCovErr outputs and the original sources. The empirical
 gain is read out of the header (for other photometric pipelines which don't perform this estiamte,
 the gain from DECam is likely sufficient). All columns from the photometric catalogue are
-also read in at this point to be rexported with the cloudCovErr outputs.
+also read in at this point to be rexported with the CloudCovErr outputs.
 
 # Arguments:
 - `basecat`: parent directory of the cat directory holding all of the single-epoch crowdsource catalogue files
@@ -222,9 +222,9 @@ end
 """
     save_fxn(wcol,w,basecat,date,filt,vers,ccd)
 
-Saves cloudCovErr.jl outputs and initial photometric catalogue outputs to a new
+Saves CloudCovErr.jl outputs and initial photometric catalogue outputs to a new
 single-epoch catalogue. Massages types of columns to reduce data storage size.
-Converts the native cloudCovErr.jl output of the bias offset value into a `cflux`
+Converts the native CloudCovErr.jl output of the bias offset value into a `cflux`
 corrected flux column for the ease of catalogue users.
 
 # Arguments:
@@ -262,7 +262,7 @@ end
     get_catnames(f) -> extnames
 
 Reads list of extension names from an open FITS file to determine which
-CCDs have completed photometric catalogues and are eligible for cloudCovErr.jl.
+CCDs have completed photometric catalogues and are eligible for CloudCovErr.jl.
 
 # Arguments:
 - `f`: an open FITS file handle containing `crowdsource` catalogues
@@ -323,20 +323,20 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
     end
 
     # loads from disk
-    ref_im, d_im = cloudCovErr.read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
+    ref_im, d_im = CloudCovErr.read_decam(base,date,filt,vers,ccd,corrects7=corrects7)
     bmaskd = (d_im .!= 0)
     d_im = nothing
     (sx0, sy0) = size(ref_im)
-    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = cloudCovErr.read_crowdsource(basecat,date,filt,vers,ccd)
+    x_stars, y_stars, flux_stars, decapsid, gain, mod_im, sky_im, wcol, w = CloudCovErr.read_crowdsource(basecat,date,filt,vers,ccd)
     (Nstars,) = size(x_stars)
 
     if Nstars > 0
-        psfmodel = cloudCovErr.load_psfmodel_cs(basecat,date,filt,vers,ccd)
+        psfmodel = CloudCovErr.load_psfmodel_cs(basecat,date,filt,vers,ccd)
         psfstatic511 = psfmodel(sx0÷2,sy0÷2,511)
         psfstatic33 = psfmodel(sx0÷2,sy0÷2,Np)
 
         # mask bad camera pixels/cosmic rays, then mask out star centers
-        cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
+        CloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
         testim = mod_im .- ref_im
         bimage = zeros(T,sx0,sy0)
@@ -373,7 +373,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
 
         # exposure datetime based seed
         rndseed = parse(Int,date[1:6])*10^6 + parse(Int,date[8:end])
-        cloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
+        CloudCovErr.add_sky_noise!(in_image,in_bmaskd,in_sky_im,gain;seed=rndseed)
 
         ## iterate over all star positions and compute errorbars/debiasing corrections
         star_stats = zeros(T,10,Nstars)
@@ -426,7 +426,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
             push!(wcol,col)
             push!(w,star_stats[ind,:])
         end
-        cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+        CloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
         println("Saved $ccd processing $cntStar0 of $Nstars stars")
         flush(stdout)
         pdefer = count(isnan.(star_stats[1,:]))
@@ -451,7 +451,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
             push!(wcol,col)
             push!(w,Float32[])
         end
-        cloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
+        CloudCovErr.save_fxn(wcol,w,basecat,date,filt,vers,ccd)
         println("Saved $ccd processing 0 of $Nstars stars")
         flush(stdout)
     end

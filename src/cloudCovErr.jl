@@ -1,4 +1,4 @@
-module cloudCovErr
+module CloudCovErr
 
 include("cov.jl")
 

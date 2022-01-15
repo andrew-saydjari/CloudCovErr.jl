@@ -2,8 +2,7 @@
 # for the DECaPS2 survey error bar correction. It can be
 # used as a model for other survey specific run structures.
 
-push!(LOAD_PATH, "/n/home12/saydjari/finksage/ExtSoftware/cloudCovErr.jl/src/")
-using cloudCovErr
+using CloudCovErr
 using ArgParse
 
 """
@@ -107,7 +106,7 @@ function run_wrapper()
         tiley = parg["tiley"]
     end
 
-    cloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
+    CloudCovErr.proc_all(parg["base"],parg["date"],parg["filt"],parg["vers"],
         parg["basecat"],ccdlist=parg["ccdlist"],resume=parg["resume"],corrects7=parg["cS7"],
         thr=parg["thr"],outthr=parg["outthr"],Np=parg["Np"],widx=parg["wx"],widy=wy,tilex=parg["tilex"],
         tiley=tiley,ftype=parg["ftype"])

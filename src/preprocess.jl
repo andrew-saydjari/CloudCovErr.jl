@@ -1,4 +1,4 @@
-using cloudCovErr
+using CloudCovErr
 import ImageFiltering
 import Distributions
 import StatsBase

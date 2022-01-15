@@ -1,11 +1,11 @@
-using cloudCovErr
+using CloudCovErr
 using Documenter
 
 makedocs(
-    modules = [cloudCovErr, cloudCovErr.decam],
+    modules = [CloudCovErr, CloudCovErr.decam],
     clean=true,
     highlightsig = true,
-    sitename= "cloudCovErr.jl",
+    sitename= "CloudCovErr.jl",
     format = Documenter.HTML(
         assets = ["assets/favicon.ico"],
         prettyurls = get(ENV, "CI", nothing) == "true"
@@ -18,7 +18,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/andrew-saydjari/cloudCovErr.jl.git",
+    repo = "github.com/andrew-saydjari/CloudCovErr.jl.git",
     branch = "gh-pages",
     devbranch = "main"
 )

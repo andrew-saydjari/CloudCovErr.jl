@@ -33,12 +33,12 @@ kstar_circle_mask
 ## DECam Specific Functions
 
 ```@docs
-cloudCovErr.decam.read_decam
-cloudCovErr.decam.read_crowdsource
-cloudCovErr.decam.inject_rename
-cloudCovErr.decam.load_psfmodel_cs
-cloudCovErr.decam.save_fxn
-cloudCovErr.decam.get_catnames
-cloudCovErr.decam.proc_ccd
-cloudCovErr.decam.proc_all
+CloudCovErr.decam.read_decam
+CloudCovErr.decam.read_crowdsource
+CloudCovErr.decam.inject_rename
+CloudCovErr.decam.load_psfmodel_cs
+CloudCovErr.decam.save_fxn
+CloudCovErr.decam.get_catnames
+CloudCovErr.decam.proc_ccd
+CloudCovErr.decam.proc_all
 ```
