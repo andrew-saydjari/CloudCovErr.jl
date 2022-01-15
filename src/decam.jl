@@ -290,7 +290,7 @@ end
 # an acutal implementation
 
 """
-    proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+    proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
 
 Primary run function for a given CCD image of a larger exposure.
 
@@ -312,9 +312,8 @@ Primary run function for a given CCD image of a larger exposure.
 - `tilex`: total number of tile divisions along x (default 1)
 - `tiley`: total number of tile divisions along y (default tilex)
 - `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
-- `prealloc`: preallocation above the per-ccd level (default false, not recommended)
 """
-function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corrects7=true,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
     println("Started $ccd")
     flush(stdout)
 
@@ -340,18 +339,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
         # mask bad camera pixels/cosmic rays, then mask out star centers
         cloudCovErr.gen_mask_staticPSF2!(bmaskd, psfstatic511, psfstatic33, x_stars, y_stars, flux_stars; thr=thr)
 
-        if !prealloc
-            testim = mod_im .- ref_im
-            bimage = zeros(T,sx0,sy0)
-            bimageI = zeros(Int64,sx0,sy0)
-            testim2 = zeros(T,sx0,sy0)
-            bmaskim2 = zeros(Bool,sx0,sy0)
-            goodpix = zeros(Bool,sx0,sy0)
-        else
-            # I might need some fill zeros here
-            testim .= mod_im .- ref_im
-            fill!(goodpix,false)
-        end
+        testim = mod_im .- ref_im
+        bimage = zeros(T,sx0,sy0)
+        bimageI = zeros(Int64,sx0,sy0)
+        testim2 = zeros(T,sx0,sy0)
+        bmaskim2 = zeros(Bool,sx0,sy0)
+        goodpix = zeros(Bool,sx0,sy0)
 
         bmaskd .|= (abs.(testim) .> outthr)
         prelim_infill!(testim,bmaskd,bimage,bimageI,testim2,bmaskim2,goodpix,ccd;widx=19,widy=19,ftype=ftype)
@@ -387,14 +380,12 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
         star_stats = zeros(T,10,Nstars)
         star_k = zeros(Int32,10,Nstars)
 
-        if !prealloc
-            # preallocate the cov and μ per star variables
-            cov = zeros(T,Np*Np,Np*Np)
-            μ = zeros(T,Np*Np)
+        # preallocate the cov and μ per star variables
+        cov = zeros(T,Np*Np,Np*Np)
+        μ = zeros(T,Np*Np)
 
-            # compute a radial mask for reduced num cond pixels
-            circmask = kstar_circle_mask(Np,rlim=256)
-        end
+        # compute a radial mask for reduced num cond pixels
+        circmask = kstar_circle_mask(Np,rlim=256)
 
         # some important global sizes for the loop
         cntStar0 = 0
@@ -469,7 +460,7 @@ function proc_ccd(base,date,filt,vers,basecat,ccd;thr=20,outthr=20000,Np=33,corr
 end
 
 """
-    proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+    proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
 
 Exposure level run function the manages which ccds to run and calls proc_ccd serially.
 
@@ -492,9 +483,8 @@ Exposure level run function the manages which ccds to run and calls proc_ccd ser
 - `tilex`: total number of tile divisions along x (default 1)
 - `tiley`: total number of tile divisions along y (default tilex)
 - `ftype::Int`: determine the Float precision, 32 is Float32, otherwise Float64
-- `prealloc`: preallocation above the per-ccd level (default false, not recommended)
 """
-function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32,prealloc=false)
+function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,widy=widx,tilex=1,tiley=tilex,ftype::Int=32)
     infn = basecat*"cat/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.fits"
     outfn = basecat*"cer/c4d_"*date*"_ooi_"*filt*"_"*vers*".cat.cer.fits"
     println("Starting to process "*infn)
@@ -528,28 +518,6 @@ function proc_all(base,date,filt,vers,basecat;ccdlist=String[],resume=false,corr
     if length(ccdlist) != 0
         extnames = intersect(extnames,ccdlist)
         println("Only running unfinished ccds in ccdlist: ", extnames)
-    end
-
-    if prealloc
-        if ftype == 32
-            T = Float32
-        else
-            T = Float64
-        end
-
-        testim = zeros(T,sx0,sy0)
-        bimage = zeros(T,sx0,sy0)
-        bimageI = zeros(Int64,sx0,sy0)
-        testim2 = zeros(T,sx0,sy0)
-        bmaskim2 = zeros(Bool,sx0,sy0)
-        goodpix = zeros(Bool,sx0,sy0)
-
-        # preallocate the cov and μ per star variables
-        cov = zeros(T,Np*Np,Np*Np)
-        μ = zeros(T,Np*Np)
-
-        # compute a radial mask for reduced num cond pixels
-        circmask = kstar_circle_mask(Np,rlim=256)
     end
 
     # main loop over ccds
