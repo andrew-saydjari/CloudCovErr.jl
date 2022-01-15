@@ -29,6 +29,9 @@ function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        @static if Sys.iswindows()
+            Conda.add("nomkl",channel="conda-forge")
+        end
         Conda.add("crowdsourcephoto",channel="conda-forge")
     end
     decam_dir = dirname(@__FILE__)*"/decam_dir"
