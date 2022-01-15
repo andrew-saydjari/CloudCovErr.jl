@@ -8,8 +8,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        julia-version: ['1.5', '1', 'nightly']
-        os: [ubuntu-18.04, macOS-latest]
+        julia-version: ['1.6', '1', 'nightly']
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
       - uses: actions/checkout@v2
