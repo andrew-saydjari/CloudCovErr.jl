@@ -36,6 +36,10 @@ module tst_cov
         @test cloudCovErr.get_catnames(f) == ["S6","S7"]
 
         # run one real example end to end
-        @test_nowarn cloudCovErr.proc_all(test_dir*"/data/decaps/c4d_","170119_085651","r","v1",test_dir*"/data/decaps/",ccdlist=["S6"],resume=true,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,tilex=8)
+        #@test_nowarn cloudCovErr.proc_all(test_dir*"/data/decaps/c4d_","170119_085651","r","v1",test_dir*"/data/decaps/",ccdlist=["S6"],resume=true,corrects7=true,thr=20,outthr=20000,Np=33,widx=129,tilex=8)
+        based = test_dir*"/data/decaps/c4d_"
+        catd = test_dir*"/data/decaps/"
+        decap2f = test_dir*"/decaps2.jl"
+        @test_nowarn run(`julia $decap2f --ccdlist S6 --cS7 -r --tilex8 $based 170119_085651 r v1 $catd`)
     end
 end
