@@ -8,11 +8,22 @@ A [Julia](http://julialang.org) package for debiasing and improving error bar es
 
 ## Installation
 
-`CloudCovErr.jl` can be installed using the built-in package manager
+A stable version of `CloudCovErr.jl` can be installed using the built-in package manager
 
 ```julia
-pkg> add CloudCovErr
+import Pkg
+Pkg.add("CloudCovErr")
 ```
+
+
+For the most recent development version, install directly from the GitHub
+
+```julia
+import Pkg
+Pkg.add("url=https://github.com/andrew-saydjari/CloudCovErr.jl")
+```
+
+Currently, we only support compatibility with linux and macOS in order to easily interface with dependencies of [crowdsource](https://github.com/schlafly/crowdsource). Due to older versions of Julia bundling outdated libstcd++, we only support Julia 1.6+ again to make interfacing with python-based photometric pipelines easier (see [issue](https://github.com/JuliaLang/julia/issues/34276)). However, workarounds exist for both problems. Please open an issue if there is some compatibility you would like supported.  
 
 ## Usage
 

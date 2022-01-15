@@ -8,12 +8,21 @@ Pipeline for debiasing and improving error bar estimates for photometry on top o
 
 ## Installation
 
-**CloudCovErr** is a registered package so it can be installed using `Pkg.add`.
+**CloudCovErr** is a registered package so a stable version can be installed using `Pkg.add`.
 
 ```julia
 import Pkg
 Pkg.add("CloudCovErr")
 ```
+
+For the most recent development version, install directly from the GitHub
+
+```julia
+import Pkg
+Pkg.add("url=https://github.com/andrew-saydjari/CloudCovErr.jl")
+```
+
+Currently, we only support compatibility with linux and macOS in order to easily interface with dependencies of [crowdsource](https://github.com/schlafly/crowdsource). Due to older versions of Julia bundling outdated libstcd++, we only support Julia 1.6+ again to make interfacing with python-based photometric pipelines easier (see [issue](https://github.com/JuliaLang/julia/issues/34276)). However, workarounds exist for both problems. Please open an issue if there is some compatibility you would like supported.  
 
 ## Documentation
 
