@@ -13,6 +13,10 @@ module tst_cov
         @test d_im[1,1] == 1
         @test abs(ref_im[1]-416.4855651855) < 1e-7
 
+        ref_im, d_im = CloudCovErr.read_decam(test_dir*"/data/decaps/c4d_","170119_085651","r","v1","S7";corrects7=true)
+        @test d_im[1,1] == 1
+        @test abs(ref_im[1]-375.392761230468) < 1e-7
+
         out = CloudCovErr.read_crowdsource(test_dir*"/data/decaps/","170119_085651","r","v1","S6")
         @test length(out) == 9
         wcol = out[end-1]
