@@ -2,6 +2,7 @@ module tst_cov
     using Test
     using CloudCovErr
     using FITSIO
+    using PyCall
 
     test_dir = dirname(@__FILE__)
 
@@ -13,6 +14,9 @@ module tst_cov
         @test d_im[1,1] == 1
         @test abs(ref_im[1]-416.4855651855) < 1e-7
 
+        py"""
+        os.environ['DECAM_DIR'] = $decam_dir
+        """
         ref_im, d_im = CloudCovErr.read_decam(test_dir*"/data/decaps/c4d_","170119_085651","r","v1","S7";corrects7=true)
         @test d_im[1,1] == 1
         @test abs(ref_im[1]-375.392761230468) < 1e-7
