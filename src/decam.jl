@@ -11,6 +11,8 @@ export get_catnames #
 export proc_ccd
 export proc_all
 
+export decam_dir
+
 using CloudCovErr
 using PyCall
 using FITSIO
