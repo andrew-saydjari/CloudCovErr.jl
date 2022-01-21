@@ -15,6 +15,7 @@ module tst_cov
         @test abs(ref_im[1]-416.4855651855) < 1e-7
 
         py"""
+        import os
         os.environ['DECAM_DIR'] = $decam_dir
         """
         ref_im, d_im = CloudCovErr.read_decam(test_dir*"/data/decaps/c4d_","170119_085651","r","v1","S7";corrects7=true)
