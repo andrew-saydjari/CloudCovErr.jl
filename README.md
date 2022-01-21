@@ -3,6 +3,7 @@
 [![][docs-dev-img]][docs-dev-url]
 [![][action-img]][action-url]
 [![][codecov-img]][codecov-url]
+[![][arxiv-img]][arxiv-url]
 
 Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background. The procedure first estimates the covariance matrix of the residuals from a previous photometric model and then computes corrections to the estimated flux and flux uncertainties.
 
@@ -28,6 +29,20 @@ Currently, we only support compatibility with linux and macOS in order to easily
 
 Detailed documentation can be found [here][docs-dev-url].
 
+Users may also find it helpful to consult the [manuscript](https://arxiv.org/abs/2201.07246) accompanying this release.
+
+## Example
+
+A key ingredient to our flux debiasing and uncertainty estimation algorithm is a good estimate of the **distribution** of possible backgrounds behind a star. An example is shown below.
+
+[![][infill-img]][infill-url]
+
+## Contributing and Questions
+
+This is a new piece of software. [Filing an
+issue](https://github.com/andrew-saydjari/CloudCovErr.jl/issues/new) to report a
+bug or request a feature is extremely valuable in helping us prioritize what to work on, so don't hesitate.
+
 <!-- URLS -->
 [action-img]: https://github.com/andrew-saydjari/CloudCovErr.jl/workflows/Unit%20test/badge.svg
 [action-url]: https://github.com/andrew-saydjari/CloudCovErr.jl/actions
@@ -38,8 +53,8 @@ Detailed documentation can be found [here][docs-dev-url].
 [codecov-img]: https://codecov.io/github/andrew-saydjari/CloudCovErr.jl/coverage.svg?branch=main
 [codecov-url]: https://codecov.io/github/andrew-saydjari/CloudCovErr.jl?branch=main
 
-## Contributing and Questions
+[infill-img]: docs/src/assets/infill_radius.gif
+[infill-url]: https://faun.rc.fas.harvard.edu/saydjari/CloudCovErr/thr_test.mp4
 
-This is a new piece of software. [Filing an
-issue](https://github.com/andrew-saydjari/CloudCovErr.jl/issues/new) to report a
-bug or request a feature is extremely valuable in helping us prioritize what to work on, so don't hesitate.
+[arxiv-img]: https://img.shields.io/badge/arXiv-2201.07246-00cc00.svg
+[arxiv-url]: https://arxiv.org/abs/2201.07246
