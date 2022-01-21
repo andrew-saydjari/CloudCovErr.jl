@@ -35,7 +35,7 @@ Users may also find it helpful to consult the [manuscript](https://arxiv.org/abs
 
 A key ingredient to our flux debiasing and uncertainty estimation algorithm is a good estimate of the **distribution** of possible backgrounds behind a star. An example is shown below.
 
-[![][infill-img]][infill-url]
+<!-- [![][infill-img]][infill-url] -->
 
 ## Contributing and Questions
 
@@ -53,7 +53,7 @@ bug or request a feature is extremely valuable in helping us prioritize what to 
 [codecov-img]: https://codecov.io/github/andrew-saydjari/CloudCovErr.jl/coverage.svg?branch=main
 [codecov-url]: https://codecov.io/github/andrew-saydjari/CloudCovErr.jl?branch=main
 
-[infill-img]: docs/src/assets/infill_radius.gif
+[infill-img]: docs/src/assets/infill_radius_white.gif
 [infill-url]: https://faun.rc.fas.harvard.edu/saydjari/CloudCovErr/thr_test.mp4
 
 [arxiv-img]: https://img.shields.io/badge/arXiv-2201.07246-00cc00.svg
