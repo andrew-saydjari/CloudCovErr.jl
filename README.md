@@ -35,7 +35,7 @@ Users may also find it helpful to consult the [manuscript](https://arxiv.org/abs
 
 A key ingredient to our flux debiasing and uncertainty estimation algorithm is a good estimate of the **distribution** of possible backgrounds behind a star. An example is shown below.
 
-<!-- [![][infill-img]][infill-url] -->
+[![][infill-img]][infill-url]
 
 ## Contributing and Questions
 
