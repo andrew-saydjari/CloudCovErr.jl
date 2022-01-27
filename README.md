@@ -4,6 +4,7 @@
 [![][action-img]][action-url]
 [![][codecov-img]][codecov-url]
 [![][arxiv-img]][arxiv-url]
+<!--[![][Pkg-img]][Pkg-url]-->
 
 Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background. The procedure first estimates the covariance matrix of the residuals from a previous photometric model and then computes corrections to the estimated flux and flux uncertainties.
 
@@ -58,3 +59,6 @@ bug or request a feature is extremely valuable in helping us prioritize what to 
 
 [arxiv-img]: https://img.shields.io/badge/arXiv-2201.07246-00cc00.svg
 [arxiv-url]: https://arxiv.org/abs/2201.07246
+
+[Pkg-img]: https://juliahub.com/docs/CloudCovErr/pkgeval.svg
+[Pkg-url]: https://juliahub.com/ui/Packages/CloudCovErr/Hjg4d
