@@ -44,6 +44,8 @@ This is a new piece of software. [Filing an
 issue](https://github.com/andrew-saydjari/CloudCovErr.jl/issues/new) to report a
 bug or request a feature is extremely valuable in helping us prioritize what to work on, so don't hesitate.
 
+<img width="0" src="https://visitor-badge.glitch.me/badge?page_id=andrew-saydjari.CloudCovErr.jl" />
+
 <!-- URLS -->
 [action-img]: https://github.com/andrew-saydjari/CloudCovErr.jl/workflows/Unit%20test/badge.svg
 [action-url]: https://github.com/andrew-saydjari/CloudCovErr.jl/actions
