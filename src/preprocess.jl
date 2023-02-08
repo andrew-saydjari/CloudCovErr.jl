@@ -14,6 +14,12 @@ export findmaxpsf #
 export kstar_circle_mask #
 export im_subrng #
 
+function __init__()
+    if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        Conda.add(["python=3.9","crowdsourcephoto"])
+    end
+end
+
 """
     kstar_circle_mask(Np;rlim=256) -> circmask
 
