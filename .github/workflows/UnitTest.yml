@@ -31,6 +31,8 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - name: "Fix Conda"
+        env:
+          PYTHON: ""
         run: julia -e 'using Pkg; Pkg.add("PyCall"); PyCall.Conda.add(["python=3.9","crowdsourcephoto"])
       - name: "Unit Test"
         uses: julia-actions/julia-runtest@master
