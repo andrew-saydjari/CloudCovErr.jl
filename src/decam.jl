@@ -22,6 +22,7 @@ import StatsBase
 using Random
 using LinearAlgebra
 import Conda
+import Pkg
 
 """
     __int__()
