@@ -1,7 +1,8 @@
 name: Documentation
-
-on: [workflow_dispatch, push] #, push, pull_request]
-
+on:
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
