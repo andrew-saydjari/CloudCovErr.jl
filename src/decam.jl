@@ -34,14 +34,11 @@ function __init__()
         PyCall.Conda.add(["python=3.9","crowdsourcephoto"])
     end
     decam_dir = dirname(@__FILE__)*"/decam_dir"
+    println(PyCall.conda)
     py"""
     import sys
-    try:
-        import crowdsource.psf as psfmod
-        from crowdsource.decam_proc import read_data
-    except:
-        import crowdsourcephoto.psf as psfmod
-        from crowdsourcephoto.decam_proc import read_data
+    import crowdsource.psf as psfmod
+    from crowdsource.decam_proc import read_data
     from astropy.io import fits
     from functools import partial
     import os
