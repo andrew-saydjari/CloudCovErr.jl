@@ -33,8 +33,12 @@ function __init__()
     decam_dir = dirname(@__FILE__)*"/decam_dir"
     py"""
     import sys
-    import crowdsource.psf as psfmod
-    from crowdsource.decam_proc import read_data
+    try:
+        import crowdsource.psf as psfmod
+        from crowdsource.decam_proc import read_data
+    except:
+        import crowdsourcephoto.psf as psfmod
+        from crowdsourcephoto.decam_proc import read_data
     from astropy.io import fits
     from functools import partial
     import os
