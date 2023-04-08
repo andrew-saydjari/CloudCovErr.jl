@@ -18,7 +18,7 @@ jobs:
       - name: "Fix Conda"
         env:
           PYTHON: ""
-        run: julia -e 'using Pkg; Pkg.add("PyCall"); using PyCall; PyCall.Conda.add(["python=3.9","crowdsourcephoto"]); Pkg.build("PyCall")'
+        run: julia -e 'using Pkg; Pkg.add("PyCall"); using PyCall; PyCall.Conda.add(["conda=23.1.0"]); PyCall.Conda.add(["python=3.9","crowdsourcephoto"]); Pkg.build("PyCall")'
       - name: Build and deploy
         env:
           PYTHON: ""
