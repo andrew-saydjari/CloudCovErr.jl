@@ -35,7 +35,7 @@ jobs:
           PYTHON: ""
         run: julia -e 'using Pkg; Pkg.add("PyCall"); using PyCall; PyCall.Conda.add(["python=3.9","crowdsourcephoto","scipy==1.6.1"]); Pkg.build("PyCall")'
       - name: "Unit Test"
-        uses: julia-actions/julia-runtest@master
+        uses: julia-actions/julia-runtest@v1
         env:
           PYTHON: ""
       - uses: julia-actions/julia-processcoverage@v1
