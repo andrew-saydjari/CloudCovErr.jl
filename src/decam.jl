@@ -31,7 +31,7 @@ function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
-        PyCall.Conda.add(["python=3.9","crowdsourcephoto","scipy=1.8.1"])
+        PyCall.Conda.add(["python=3.9","crowdsourcephoto","scipy=1.8.1","astropy=5.2.2"])
     end
     decam_dir = dirname(@__FILE__)*"/decam_dir"
     py"""
