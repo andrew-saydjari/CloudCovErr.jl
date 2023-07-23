@@ -124,7 +124,7 @@ end
 """
     condCovEst_wdiag(cov_loc,μ,km,kpsf2d,data_in,stars_in,psft;Np=33,export_mean=false,n_draw=0,diag_on=true) -> out
 
-Using a local covariance matrix estimate `cov_loc` and a set of known ("good") pixels `km`
+Using a local covariance matrix estimate `cov_loc`, a set of masked pixels `km`
 and "hidden" pixels `kpsf2d`, this function computes a prediction for the mean value
 of the `kpsf2d` pixels and the covariance matrix of the `kpsf2d` pixels. In terms of
 statistics use to adjust the photometry of a star, we are only interested in the
@@ -138,7 +138,7 @@ draws from the distribution of reconstructions.
 # Arguments:
 - `cov_loc`: local covariance matrix
 - `μ`: vector containing mean value for each pixel in the patch
-- `km`: unmasked pixels
+- `km`: masked pixels (either bad or do not want to use for conditioning)
 - `kpsf2d`: pixels masked due to the star of interest
 - `data_in`: (non-infilled) residual image in local patch
 - `psft`: static array (image) of the stellar PSF
