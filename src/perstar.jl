@@ -240,8 +240,7 @@ every detection. Math may either be performed `Float32` or `Float64`.
 - `widy::Int`: width of boxcar window in y which determines size of region used for samples for the local covariance estimate
 """
 function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array{T,2},bism::Array{T,4},Np::Int,widx::Int,widy::Int) where T <:Union{Float32,Float64}
-    Δx = (widx-1)÷2
-    Δy = (widy-1)÷2
+    
     halfNp = (Np-1) ÷ 2
     Δr, Δc = cx-(halfNp+1), cy-(halfNp+1)
     # Δr, Δc = cx-(halfNp-1), cy-(halfNp-1)
