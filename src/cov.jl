@@ -48,8 +48,7 @@ Boxcar smooths an input image (or paddedview) `arr` with window size `widx` by
 """
 function boxsmooth!(out::AbstractArray, arr::AbstractArray, tot::Array{T,1}, widx::Int, widy::Int) where T
     (sx, sy) = size(arr)
-    Δx = (widx-1)÷2
-    Δy = (widy-1)÷2
+
     for j=1:(sy-widy+1)
         if (j==1)
             for n = 1:widy
@@ -101,10 +100,6 @@ function cov_avg!(bimage, ism, bism, in_image; Np::Int=33, widx::Int=129, widy::
     else
         T = Float64
     end
-
-    Δx = (widx-1)÷2
-    Δy = (widy-1)÷2
-    halfNp = (Np-1) ÷ 2
 
     (sx1, sy1) = size(in_image)
     tot = zeros(T,sx1);
