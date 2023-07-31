@@ -265,7 +265,7 @@ function build_cov!(cov::Array{T,2},μ::Array{T,1},cx::Int,cy::Int,bimage::Array
                 @inbounds cov[i,j] = t
                 @inbounds cov[j,i] = t
                 if i == j
-                    @inbounds μ[i] = μ1μ2
+                    @inbounds μ[i] = sqrt(μ1μ2)
                 end
             end
         end
