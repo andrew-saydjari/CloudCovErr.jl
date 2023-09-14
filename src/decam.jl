@@ -31,32 +31,52 @@ Builds the required python crowdsource dependency and exports the required load
 function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
+    decam_dir = dirname(@__FILE__)*"/decam_dir"
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
         ENV["PYTHON"]=""
         Pkg.build("PyCall")
         PyCall.Conda.add(["python=3.9","crowdsourcephoto=0.5.6","scipy=1.6.1","astropy=5.2.2"])
         Pkg.build("PyCall")
+        py"""
+        import sys
+        from astropy.io import fits
+        from functools import partial
+        import os
+        import crowdsource.psf as psfmod
+        from crowdsource.decam_proc import read_data
+    
+        # default decam_dir at Harvard
+        if 'DECAM_DIR' not in os.environ:
+            os.environ['DECAM_DIR'] = $decam_dir
+    
+        def load_psfmodel(outfn, ccd, filter, pixsz=9):
+            f = fits.open(outfn)
+            psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
+            f.close()
+            psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
+            return psfmodel
+        """
+    else
+        py"""
+        import sys
+        from astropy.io import fits
+        from functools import partial
+        import os
+        import crowdsource.psf as psfmod
+        from crowdsource.decam_proc import read_data
+    
+        # default decam_dir at Harvard
+        if 'DECAM_DIR' not in os.environ:
+            os.environ['DECAM_DIR'] = $decam_dir
+    
+        def load_psfmodel(outfn, ccd, filter, pixsz=9):
+            f = fits.open(outfn)
+            psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
+            f.close()
+            psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
+            return psfmodel
+        """
     end
-    decam_dir = dirname(@__FILE__)*"/decam_dir"
-    py"""
-    import sys
-    from astropy.io import fits
-    from functools import partial
-    import os
-    import crowdsource.psf as psfmod
-    from crowdsource.decam_proc import read_data
-
-    # default decam_dir at Harvard
-    if 'DECAM_DIR' not in os.environ:
-        os.environ['DECAM_DIR'] = $decam_dir
-
-    def load_psfmodel(outfn, ccd, filter, pixsz=9):
-        f = fits.open(outfn)
-        psfmodel = psfmod.linear_static_wing_from_record(f[ccd+"_PSF"].data[0],filter=filter)
-        f.close()
-        psfmodel.fitfun = partial(psfmod.fit_linear_static_wing, filter=filter, pixsz=pixsz)
-        return psfmodel
-    """
 end
 
 ## File specific read/write functions
