@@ -32,6 +32,7 @@ function for obtaining the position dependent psf to the python namespace.
 """
 function __init__()
     if !haskey(Conda._installed_packages_dict(),"crowdsourcephoto")
+        ENV["PYTHON"]=""
         Pkg.build("PyCall")
         PyCall.Conda.add(["python=3.9","crowdsourcephoto=0.5.6","scipy=1.6.1","astropy=5.2.2"])
         Pkg.build("PyCall")
@@ -39,11 +40,11 @@ function __init__()
     decam_dir = dirname(@__FILE__)*"/decam_dir"
     py"""
     import sys
-    import crowdsource.psf as psfmod
-    from crowdsource.decam_proc import read_data
     from astropy.io import fits
     from functools import partial
     import os
+    import crowdsource.psf as psfmod
+    from crowdsource.decam_proc import read_data
 
     # default decam_dir at Harvard
     if 'DECAM_DIR' not in os.environ:
