@@ -35,7 +35,7 @@ jobs:
       - name: "Fix Conda"
         env:
           PYTHON: ""
-        run: julia -e 'using Pkg; Pkg.add("PyCall"); using PyCall; PyCall.Conda.add(["python=3.9","crowdsourcephoto","scipy==1.6.1","astropy=5.2.2"]); Pkg.build("PyCall")'
+        run: julia -e 'using Pkg; Pkg.add("PyCall"); using PyCall; PyCall.Conda.add(["python=3.9","crowdsourcephoto=0.5.6","scipy==1.6.1","astropy=5.2.2"]); Pkg.build("PyCall")'
       - name: "Unit Test"
         uses: julia-actions/julia-runtest@v1
         env:
