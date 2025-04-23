@@ -8,6 +8,9 @@
 
 Pipeline for debiasing and improving error bar estimates for photometry on top of structured/filamentary background. The procedure first estimates the covariance matrix of the residuals from a previous photometric model and then computes corrections to the estimated flux and flux uncertainties.
 
+# Discontinued. Please see [CloudCovFix.jl](https://github.com/andrew-saydjari/CloudCovFix.jl)
+CloudCovFix.jl combines CloudCovErr.jl and CloudClean.jl. The CloudCovErr.jl repo is now mostly a documentation repo. The main issue is that the python dependencies we built to interface with crowdsource cannot be made stable due to Conda package management issues. The new implementation at CloudCovFix.jl is "python-free" and any interfacing will have to be done as a wrapper.
+
 ## Installation
 
 **CloudCovErr** is a registered package so a stable version can be installed using `Pkg.add`.
